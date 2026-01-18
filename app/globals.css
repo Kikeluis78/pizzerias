@@ -5,9 +5,9 @@
 
 :root {
   /* Food-themed warm color palette for pizzeria */
-  --background: oklch(0.99 0.01 85);
+  --background: oklch(73.828% 0.13736 76.301);
   --foreground: oklch(0.25 0.02 30);
-  --card: oklch(1 0 0);
+  --card: oklch(89.524% 0.17528 105.195);
   --card-foreground: oklch(0.25 0.02 30);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.25 0.02 30);
@@ -16,12 +16,12 @@
   --secondary: oklch(0.35 0.08 60); /* Warm brown */
   --secondary-foreground: oklch(0.99 0 0);
   --muted: oklch(0.95 0.01 85);
-  --muted-foreground: oklch(0.5 0.02 30);
+  --muted-foreground: oklch(53.693% 0.23948 261.993);
   --accent: oklch(0.75 0.15 85); /* Warm yellow accent */
   --accent-foreground: oklch(0.25 0.02 30);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.9 0.01 85);
+  --border: oklch(80.874% 0.16733 78.623);
   --input: oklch(0.9 0.01 85);
   --ring: oklch(0.55 0.18 25);
   --chart-1: oklch(0.55 0.18 25);

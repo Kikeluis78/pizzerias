@@ -12,8 +12,8 @@ export default function Pizza2x1Page() {
       <main className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-2">Especialidades 2x1</h1>
-            <p className="text-muted-foreground text-lg">Dos pizzas al precio de una - Elige tus favoritas</p>
+            <h1 className="text-4xl text-red-700 font-bold mb-1">Especialidades 2x1</h1>
+            <p className="text-2x1 text-orange-300">Dos pizzas al precio de una</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

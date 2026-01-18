@@ -7,10 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { MapPin, CreditCard, ShoppingBag, MessageCircle, CheckCircle, X, User } from "lucide-react"
+import { MapPin, CreditCard, ShoppingBag, MessageCircle, CheckCircle, X, User, Hash } from "lucide-react"
 import { useCart } from "@/hooks/use-cart"
 import { useRouter } from "next/navigation"
 import Swal from "sweetalert2"
+import { pizzeriaConfig } from "@/config/pizzeria.config"
 
 interface Address {
   userName: string
@@ -28,6 +29,16 @@ interface GuestData {
   phone: string
 }
 
+// Función para generar folio único
+const generateOrderId = (): string => {
+  const timestamp = Date.now().toString().slice(-6)
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const randomLetter = letters[Math.floor(Math.random() * letters.length)]
+  
+  return `ORD-${randomLetter}${timestamp}${random}`
+}
+
 export default function ConfirmarPedidoPage() {
   const router = useRouter()
   const { items, getTotal, clearCart } = useCart()
@@ -39,9 +50,13 @@ export default function ConfirmarPedidoPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null)
   const [isGuest, setIsGuest] = useState(false)
   const [guestData, setGuestData] = useState<GuestData>({ name: "", phone: "" })
+  const [orderId, setOrderId] = useState<string>("") // <-- NUEVO: Folio único
 
+  // ========== EFFECTS ==========
   useEffect(() => {
     setMounted(true)
+    // Generar folio único al montar el componente
+    setOrderId(generateOrderId())
   }, [])
 
   useEffect(() => {
@@ -52,6 +67,7 @@ export default function ConfirmarPedidoPage() {
       setIsGuest(true)
     }
 
+    // Cargar datos guardados
     const savedAddress = localStorage.getItem("selectedAddress")
     const savedPayment = localStorage.getItem("selectedPaymentMethod")
     const savedCash = localStorage.getItem("cashAmount")
@@ -69,6 +85,7 @@ export default function ConfirmarPedidoPage() {
     }
   }, [mounted, items, router])
 
+  // ========== CÁLCULOS ==========
   const calculateDiscount = () => {
     if (!appliedCoupon) return 0
     return (getTotal() * appliedCoupon.discount) / 100
@@ -93,6 +110,7 @@ export default function ConfirmarPedidoPage() {
     }
   }
 
+  // ========== MENSAJE WHATSAPP ==========
   const generateWhatsAppMessage = () => {
     const userAccount = localStorage.getItem("userAccount")
     let user
@@ -103,7 +121,8 @@ export default function ConfirmarPedidoPage() {
       user = userAccount ? JSON.parse(userAccount) : { name: "Cliente", phone: "" }
     }
 
-    let message = `*🍕 NUEVO PEDIDO - DELLA CASA*\n\n`
+    let message = `*🍕 NUEVO PEDIDO - ${pizzeriaConfig.nombre.toUpperCase()}*\n\n`
+    message += `*📋 FOLIO:* ${orderId}\n` // <-- NUEVO: Agregar folio
     message += `*Cliente:* ${user.name}\n`
     message += `*Teléfono:* ${user.phone || address?.phone || "No especificado"}\n\n`
 
@@ -111,7 +130,6 @@ export default function ConfirmarPedidoPage() {
     items.forEach((item, index) => {
       message += `${index + 1}. ${item.name}\n`
       if (item.description) {
-        // Show description with proper formatting
         const lines = item.description.split("\n")
         lines.forEach((line) => {
           if (line.trim()) {
@@ -126,11 +144,9 @@ export default function ConfirmarPedidoPage() {
 
     message += `*💰 RESUMEN:*\n`
     message += `Subtotal: $${getTotal()}\n`
-
     if (appliedCoupon) {
       message += `Descuento (${appliedCoupon.code} - ${appliedCoupon.discount}%): -$${calculateDiscount().toFixed(2)}\n`
     }
-
     message += `Envío: GRATIS\n`
     message += `*TOTAL: $${getFinalTotal().toFixed(2)}*\n\n`
 
@@ -157,11 +173,13 @@ export default function ConfirmarPedidoPage() {
       message += `*🏪 RECOGER EN RESTAURANTE*\n`
     }
 
-    message += `\n_Pedido realizado: ${new Date().toLocaleString("es-MX")}_`
+    message += `\n*📅 FECHA Y HORA:* ${new Date().toLocaleString("es-MX")}`
+    message += `\n_Folio generado automáticamente: ${orderId}_`
 
-    return encodeURIComponent(message)
+    return message
   }
 
+  // ========== HANDLERS ==========
   const handleCancelOrder = () => {
     Swal.fire({
       title: "¿Cancelar pedido?",
@@ -178,6 +196,7 @@ export default function ConfirmarPedidoPage() {
   }
 
   const handleConfirmOrder = () => {
+    // Validar datos de invitado
     if (isGuest) {
       if (!guestData.name.trim() || !guestData.phone.trim()) {
         Swal.fire({
@@ -189,12 +208,31 @@ export default function ConfirmarPedidoPage() {
       }
     }
 
-    const phoneNumber = "5215526212166"
-    const message = generateWhatsAppMessage()
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`
+    // Guardar pedido en localStorage (opcional, para historial)
+    const orderData = {
+      id: orderId,
+      items,
+      total: getFinalTotal(),
+      date: new Date().toISOString(),
+      customer: isGuest ? guestData : JSON.parse(localStorage.getItem("userAccount") || '{}'),
+      address,
+      paymentMethod,
+      coupon: appliedCoupon
+    }
 
+    // Guardar en historial de pedidos
+    const ordersHistory = JSON.parse(localStorage.getItem("ordersHistory") || "[]")
+    ordersHistory.push(orderData)
+    localStorage.setItem("ordersHistory", JSON.stringify(ordersHistory))
+
+    // Generar y enviar mensaje por WhatsApp
+    const phoneNumber = pizzeriaConfig.whatsapp.replace(/\s+/g, '')
+    const message = generateWhatsAppMessage()
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+    
     window.open(whatsappUrl, "_blank")
 
+    // Limpiar datos
     clearCart()
     localStorage.removeItem("selectedAddress")
     localStorage.removeItem("selectedPaymentMethod")
@@ -202,16 +240,24 @@ export default function ConfirmarPedidoPage() {
     localStorage.removeItem("transferFolio")
     localStorage.removeItem("appliedCoupon")
 
+    // Mostrar confirmación con folio
     Swal.fire({
       icon: "success",
       title: "¡Pedido Enviado!",
-      text: "Tu pedido ha sido enviado por WhatsApp correctamente",
+      html: `
+        <div class="text-center">
+          <p>Tu pedido ha sido enviado por WhatsApp</p>
+          <p class="mt-2 font-bold text-lg text-primary">Folio: ${orderId}</p>
+          <p class="text-sm text-muted-foreground mt-1">Guarda este folio para seguimiento</p>
+        </div>
+      `,
       confirmButtonText: "Volver al inicio",
     }).then(() => {
       router.push("/home")
     })
   }
 
+  // ========== RENDER CONDICIONAL ==========
   if (!mounted) {
     return null
   }
@@ -220,169 +266,237 @@ export default function ConfirmarPedidoPage() {
     return null
   }
 
+  // ========== COMPONENTES ==========
+  const OrderHeader = () => (
+    <Card className="mb-6 border-dashed border-primary">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Hash className="h-5 w-5" />
+          Folio del Pedido
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-2xl font-bold text-primary">{orderId}</p>
+            <p className="text-sm text-muted-foreground">Este folio será enviado en tu pedido</p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              navigator.clipboard.writeText(orderId)
+              Swal.fire({
+                icon: 'success',
+                title: 'Copiado',
+                text: 'Folio copiado al portapapeles',
+                timer: 1500
+              })
+            }}
+          >
+            Copiar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  const GuestDataForm = () => (
+    <Card className="border-primary mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <User className="h-5 w-5" />
+          Tus Datos
+        </CardTitle>
+        <CardDescription>Ingresa tus datos para completar el pedido</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="guestName">Nombre completo *</Label>
+          <Input
+            id="guestName"
+            type="text"
+            placeholder="Juan Pérez"
+            value={guestData.name}
+            onChange={(e) => setGuestData({ ...guestData, name: e.target.value })}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="guestPhone">Teléfono *</Label>
+          <Input
+            id="guestPhone"
+            type="tel"
+            placeholder="5512345678"
+            value={guestData.phone}
+            onChange={(e) => setGuestData({ ...guestData, phone: e.target.value })}
+            required
+          />
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  const OrderSummary = () => (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ShoppingBag className="h-5 w-5" />
+          Detalle del Pedido
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {items.map((item) => (
+          <div key={item.id} className="flex justify-between items-start pb-3 border-b last:border-0">
+            <div className="flex-1">
+              <h3 className="font-semibold text-card-foreground">{item.name}</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{item.description}</p>
+              <p className="text-sm text-muted-foreground mt-1">Cantidad: {item.quantity}</p>
+            </div>
+            <p className="font-bold text-primary">${item.price * item.quantity}</p>
+          </div>
+        ))}
+
+        <div className="pt-4 space-y-2 border-t">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Subtotal:</span>
+            <span className="font-semibold">${getTotal()}</span>
+          </div>
+
+          {appliedCoupon && (
+            <div className="flex justify-between text-green-600 dark:text-green-400">
+              <span>Descuento ({appliedCoupon.discount}%):</span>
+              <span className="font-semibold">-${calculateDiscount().toFixed(2)}</span>
+            </div>
+          )}
+
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Envío:</span>
+            <span className="font-semibold text-green-600 dark:text-green-400">GRATIS</span>
+          </div>
+          <div className="flex justify-between text-xl font-bold pt-2">
+            <span>Total:</span>
+            <span className="text-primary">${getFinalTotal().toFixed(2)}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  const PaymentMethod = () => (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CreditCard className="h-5 w-5" />
+          Método de Pago
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="font-semibold text-card-foreground">{getPaymentMethodName()}</p>
+        {paymentMethod === "cash" && cashAmount && (
+          <div className="mt-2 text-sm text-muted-foreground">
+            <p>Pagarás con: ${cashAmount}</p>
+            <p>Cambio: ${(Number.parseFloat(cashAmount) - getFinalTotal()).toFixed(2)}</p>
+          </div>
+        )}
+        {paymentMethod === "transfer" && transferFolio && (
+          <div className="mt-2 text-sm text-muted-foreground">
+            <p>Folio de referencia: {transferFolio}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+
+  const DeliveryAddress = () => {
+    if (!address) return null
+    
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Dirección de Entrega
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-1">
+            <p className="font-semibold text-card-foreground">{address.userName}</p>
+            <p className="text-muted-foreground">
+              {address.street} #{address.number}
+            </p>
+            <p className="text-muted-foreground">
+              {address.neighborhood}, CP {address.postalCode}
+            </p>
+            <p className="text-muted-foreground capitalize">Tipo: {address.addressType}</p>
+            {address.references && (
+              <p className="text-sm text-muted-foreground mt-2">Referencias: {address.references}</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const ConfirmationButtons = () => (
+    <Card className="border-primary">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MessageCircle className="h-5 w-5" />
+          Verifica antes de Enviar Pedido
+        </CardTitle>
+        <CardDescription>
+          ¡Una vez enviado tu pedido no hay cambios!<br/>
+          <span className="font-semibold text-primary">Folio: {orderId}</span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Button onClick={handleConfirmOrder} className="w-full" size="lg">
+          <MessageCircle className="h-5 w-5 mr-2" />
+          Confirmar y Enviar por WhatsApp
+        </Button>
+        <Button onClick={handleCancelOrder} variant="outline" className="w-full bg-transparent" size="lg">
+          <X className="h-5 w-5 mr-2 text-red-700" />
+          Cancelar Pedido
+        </Button>
+      </CardContent>
+    </Card>
+  )
+
+  // ========== RENDER PRINCIPAL ==========
   return (
     <>
       <Header />
       <main className="min-h-screen bg-background py-8">
         <div className="container mx-auto px-4 max-w-3xl">
-          <div className="flex items-center gap-3 mb-6">
+          {/* Título */}
+          <div className="flex items-center gap-3 mb-8">
             <CheckCircle className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Confirmar Pedido</h1>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Confirmar Pedido</h1>
+              <p className="text-muted-foreground">Revisa todos los detalles antes de enviar</p>
+            </div>
           </div>
 
+          {/* Secciones en orden lógico */}
           <div className="space-y-6">
-            {isGuest && (
-              <Card className="border-primary">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Tus Datos
-                  </CardTitle>
-                  <CardDescription>Ingresa tus datos para completar el pedido</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="guestName">Nombre completo *</Label>
-                    <Input
-                      id="guestName"
-                      type="text"
-                      placeholder="Juan Pérez"
-                      value={guestData.name}
-                      onChange={(e) => setGuestData({ ...guestData, name: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="guestPhone">Teléfono *</Label>
-                    <Input
-                      id="guestPhone"
-                      type="tel"
-                      placeholder="5512345678"
-                      value={guestData.phone}
-                      onChange={(e) => setGuestData({ ...guestData, phone: e.target.value })}
-                      required
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* 0. Folio del pedido */}
+            <OrderHeader />
 
-            {/* Order Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5" />
-                  Resumen del Pedido
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-start pb-3 border-b last:border-0">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-card-foreground">{item.name}</h3>
-                      <p className="text-sm text-muted-foreground whitespace-pre-line">{item.description}</p>
-                      <p className="text-sm text-muted-foreground mt-1">Cantidad: {item.quantity}</p>
-                    </div>
-                    <p className="font-bold text-primary">${item.price * item.quantity}</p>
-                  </div>
-                ))}
+            {/* 1. Datos del cliente (si es invitado) */}
+            {isGuest && <GuestDataForm />}
 
-                <div className="pt-4 space-y-2 border-t">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal:</span>
-                    <span className="font-semibold">${getTotal()}</span>
-                  </div>
+            {/* 2. Detalle del pedido */}
+            <OrderSummary />
 
-                  {appliedCoupon && (
-                    <div className="flex justify-between text-green-600 dark:text-green-400">
-                      <span>Descuento ({appliedCoupon.discount}%):</span>
-                      <span className="font-semibold">-${calculateDiscount().toFixed(2)}</span>
-                    </div>
-                  )}
+            {/* 3. Método de pago */}
+            <PaymentMethod />
 
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Envío:</span>
-                    <span className="font-semibold text-green-600 dark:text-green-400">GRATIS</span>
-                  </div>
-                  <div className="flex justify-between text-xl font-bold pt-2">
-                    <span>Total:</span>
-                    <span className="text-primary">${getFinalTotal().toFixed(2)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* 4. Dirección de entrega */}
+            <DeliveryAddress />
 
-            {/* Payment Method */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Método de Pago
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-semibold text-card-foreground">{getPaymentMethodName()}</p>
-                {paymentMethod === "cash" && cashAmount && (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    <p>Pagarás con: ${cashAmount}</p>
-                    <p>Cambio: ${(Number.parseFloat(cashAmount) - getFinalTotal()).toFixed(2)}</p>
-                  </div>
-                )}
-                {paymentMethod === "transfer" && transferFolio && (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    <p>Folio de referencia: {transferFolio}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Delivery Address */}
-            {address && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Dirección de Entrega
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-1">
-                    <p className="font-semibold text-card-foreground">{address.userName}</p>
-                    <p className="text-muted-foreground">
-                      {address.street} #{address.number}
-                    </p>
-                    <p className="text-muted-foreground">
-                      {address.neighborhood}, CP {address.postalCode}
-                    </p>
-                    <p className="text-muted-foreground capitalize">Tipo: {address.addressType}</p>
-                    {address.references && (
-                      <p className="text-sm text-muted-foreground mt-2">Referencias: {address.references}</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Confirmar y Enviar Pedido */}
-            <Card className="border-primary">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5" />
-                  Confirmar y Enviar Pedido
-                </CardTitle>
-                <CardDescription>Tu pedido será enviado directamente por WhatsApp</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button onClick={handleConfirmOrder} className="w-full" size="lg">
-                  <MessageCircle className="h-5 w-5 mr-2" />
-                  Confirmar
-                </Button>
-                <Button onClick={handleCancelOrder} variant="outline" className="w-full bg-transparent" size="lg">
-                  <X className="h-5 w-5 mr-2" />
-                  Cancelar Pedido
-                </Button>
-              </CardContent>
-            </Card>
+            {/* 5. Botones de confirmación */}
+            <ConfirmationButtons />
           </div>
         </div>
       </main>

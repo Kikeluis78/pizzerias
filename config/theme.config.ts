@@ -14,7 +14,7 @@ export const themeConfig = {
 
   // Logo y favicon
   logo: {
-    text: "Della Casa",
+    text: "DellaCasa",
     icon: "🍕",
   },
 }

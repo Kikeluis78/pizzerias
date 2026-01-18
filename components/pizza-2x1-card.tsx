@@ -172,7 +172,7 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
       <CardContent className="flex-1 space-y-4">
         {/* Size selector */}
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">Tamaño</Label>
+          <Label className="text-[50px] font-semibold">Tamaño</Label>
           <div className="grid grid-cols-4 gap-2">
             {(["CH", "MED", "GDE", "FAM"] as const).map((s) => (
               <Button
@@ -190,7 +190,7 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
         </div>
 
         <div className="space-y-3 border-t pt-3">
-          <Label className="text-base font-semibold">Primera Pizza: {especialidad.name}</Label>
+          <Label className="text-base font-semibold text-green-500">Primera Pizza: {especialidad.name}</Label>
 
           <RadioGroup value={pizza1Type} onValueChange={(v) => setPizza1Type(v as any)}>
             <div className="flex items-center space-x-2">
@@ -234,7 +234,7 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
 
         {/* Segunda Pizza */}
         <div className="space-y-3 border-t pt-3">
-          <Label className="text-base font-semibold">Segunda Pizza (2x1)</Label>
+          <Label className="text-base font-semibold text-green-500">Segunda Pizza (2x1)</Label>
 
           <div>
             <Label className="text-xs">Especialidad</Label>
@@ -304,7 +304,7 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
           )}
         </div>
 
-        {/* Complementos */}
+        {/* Complementos
         <div className="space-y-3 border-t pt-3">
           <Label className="text-base font-semibold">Agregar Complementos</Label>
           <div className="flex flex-wrap gap-2">
@@ -333,12 +333,13 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
               Refresco Lata +$28
             </Badge>
           </div>
-        </div>
+        </div>  */}
+
 
         <div className="space-y-3 border-t pt-3">
           <Label className="text-base font-semibold">Anotaciones Especiales</Label>
           <Textarea
-            placeholder="Ej: Sin cebolla, extra queso, orilla de queso, etc."
+            placeholder="Agraga o quita ingredientes ejemplo:  Sin cebolla, extra queso, orilla de queso, etc."
             value={anotaciones}
             onChange={(e) => setAnotaciones(e.target.value)}
             className="min-h-[80px] resize-none"
