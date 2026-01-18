@@ -21,7 +21,7 @@ export const pizzeriaConfig = {
   },
 
   // WhatsApp para pedidos
-  whatsapp: "525526212166",
+  whatsapp: "525611001627",
 
   // Horarios
   schedule: {
