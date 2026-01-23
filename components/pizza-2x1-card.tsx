@@ -33,7 +33,6 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
   // Segunda pizza
   const [pizza2Type, setPizza2Type] = useState<"completa" | "mitad-y-mitad">("completa")
   const [pizza2Name, setPizza2Name] = useState("")
-  const [pizza2Mitad1, setPizza2Mitad1] = useState("")
   const [pizza2Mitad2, setPizza2Mitad2] = useState("")
 
   // Complementos
@@ -62,11 +61,11 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
       return
     }
 
-    if (pizza2Type === "mitad-y-mitad" && (!pizza2Mitad1 || !pizza2Mitad2)) {
+    if (pizza2Type === "mitad-y-mitad" && !pizza2Mitad2) {
       Swal.fire({
         icon: "warning",
         title: "Faltan datos",
-        text: "Selecciona ambas mitades de la segunda pizza",
+        text: "Selecciona la segunda mitad de la segunda pizza",
       })
       return
     }
@@ -86,7 +85,7 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
     description += `\n🔴 Segunda Pizza: ${pizza2Name}\n`
     if (pizza2Type === "mitad-y-mitad") {
       description += `  Mitad y Mitad:\n`
-      description += `  • ${pizza2Mitad1}\n`
+      description += `  • ${pizza2Name}\n`
       description += `  • ${pizza2Mitad2}\n`
     } else {
       description += `  (Pizza completa)\n`
@@ -152,7 +151,6 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
     setPizza1Mitad2("")
     setPizza2Type("completa")
     setPizza2Name("")
-    setPizza2Mitad1("")
     setPizza2Mitad2("")
     setSelectedComplementos([])
     setAnotaciones("")
@@ -263,25 +261,13 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
             </div>
           </RadioGroup>
 
-          {pizza2Type === "mitad-y-mitad" && (
+          {pizza2Type === "mitad-y-mitad" && pizza2Name && (
             <Accordion type="single" collapsible>
               <AccordionItem value="mitades2">
-                <AccordionTrigger>Seleccionar mitades</AccordionTrigger>
+                <AccordionTrigger>Seleccionar segunda mitad</AccordionTrigger>
                 <AccordionContent className="space-y-2">
-                  <div>
-                    <Label className="text-xs">Primera mitad</Label>
-                    <Select value={pizza2Mitad1} onValueChange={setPizza2Mitad1}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Elegir especialidad" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {allEspecialidades.map((esp) => (
-                          <SelectItem key={esp} value={esp}>
-                            {esp}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="mb-2 text-xs text-muted-foreground bg-muted p-2 rounded">
+                    Primera mitad: <strong>{pizza2Name}</strong>
                   </div>
                   <div>
                     <Label className="text-xs">Segunda mitad</Label>

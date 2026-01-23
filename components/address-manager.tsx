@@ -174,21 +174,7 @@ export function AddressManager() {
     if (addresses.length > 0) {
       const lastAddress = addresses[addresses.length - 1]
       localStorage.setItem("selectedAddress", JSON.stringify(lastAddress))
-      Swal.fire({
-        title: "¿Qué deseas ordenar?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Pizzas 2x1",
-        cancelButtonText: "Paquetes",
-        confirmButtonColor: "#ea580c",
-        cancelButtonColor: "#f97316",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          router.push("/2x1")
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
-          router.push("/paquetes")
-        }
-      })
+      router.push("/pizzas")
     }
   }
 
@@ -204,21 +190,7 @@ export function AddressManager() {
 
     const mainAddress = addresses.find((addr) => addr.isMain) || addresses[0]
     localStorage.setItem("selectedAddress", JSON.stringify(mainAddress))
-    Swal.fire({
-      title: "¿Qué deseas ordenar?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Pizzas 2x1",
-      cancelButtonText: "Paquetes",
-      confirmButtonColor: "#ea580c",
-      cancelButtonColor: "#f97316",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        router.push("/2x1")
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        router.push("/paquetes")
-      }
-    })
+    router.push("/pizzas")
   }
 
   return (
@@ -291,9 +263,9 @@ export function AddressManager() {
             <CardTitle>{editingId ? "Editar Dirección" : "Nueva Dirección"}</CardTitle>
             <CardDescription>Completa los datos de tu dirección de entrega</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="userName">Nombre del usuario *</Label>
                   <Input
@@ -328,7 +300,7 @@ export function AddressManager() {
                   </Select>
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="street">Calle *</Label>
                   <Input
                     id="street"
@@ -379,7 +351,7 @@ export function AddressManager() {
                   />
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="references">Referencias del domicilio</Label>
                   <Textarea
                     id="references"

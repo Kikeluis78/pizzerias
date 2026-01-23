@@ -6,6 +6,10 @@ import { Pizza2x1Card } from "@/components/pizza-2x1-card"
 import { especialidades2x1 } from "@/config/menu.config"
 
 export default function Pizza2x1Page() {
+  // For now, display the first pizza as the default
+  // You can later enhance this to filter based on localStorage or route params
+  const selectedPizza = especialidades2x1[0]
+
   return (
     <>
       <Header />
@@ -16,14 +20,11 @@ export default function Pizza2x1Page() {
             <p className="text-2x1 text-orange-300">Dos pizzas al precio de una</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {especialidades2x1.map((especialidad) => (
-              <Pizza2x1Card
-                key={especialidad.name}
-                especialidad={especialidad}
-                allEspecialidades={especialidades2x1.map((e) => e.name)}
-              />
-            ))}
+          <div className="max-w-4xl mx-auto">
+            <Pizza2x1Card
+              especialidad={selectedPizza}
+              allEspecialidades={especialidades2x1.map((e) => e.name)}
+            />
           </div>
         </div>
       </main>
