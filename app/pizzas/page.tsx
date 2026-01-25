@@ -29,7 +29,8 @@ export default function PizzasPage() {
                     {/* Header Section */}
                     <div className="text-center mb-12">
                         <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                            Nuestras Pizzas 2x1
+                              Elige Que qeuieres
+                          
                         </h1>
                         <p className="text-lg text-muted-foreground mb-6">
                             Elige tu pizza favorita y disfruta de la promoción 2x1

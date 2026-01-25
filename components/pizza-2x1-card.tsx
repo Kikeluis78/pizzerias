@@ -160,6 +160,62 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
     setSelectedComplementos((prev) => (prev.includes(comp) ? prev.filter((c) => c !== comp) : [...prev, comp]))
   }
 
+  // Handler para agregar una sola pizza con 40% descuento
+  const handleAddSinglePizza = () => {
+    if (pizza1Type === "mitad-y-mitad" && !pizza1Mitad2) {
+      Swal.fire({
+        icon: "warning",
+        title: "Faltan datos",
+        text: "Selecciona la segunda mitad de la pizza",
+      })
+      return
+    }
+
+    // Calcular precio con 40% descuento
+    const originalPrice = especialidad.prices[size]
+    const discountedPrice = originalPrice * 0.6 // 40% descuento = 60% del precio original
+
+    // Build description
+    let description = `UNA PIZZA - Tamaño: ${size}\n`
+    description += `Descuento aplicado: 40%\n\n`
+    description += `🔴 Pizza: ${especialidad.name}\n`
+    
+    if (pizza1Type === "mitad-y-mitad") {
+      description += `  Mitad y Mitad:\n`
+      description += `  • ${especialidad.name}\n`
+      description += `  • ${pizza1Mitad2}\n`
+    } else {
+      description += `  (Pizza completa)\n`
+    }
+
+    if (anotaciones.trim()) {
+      description += `\n📝 Anotaciones: ${anotaciones}`
+    }
+
+    const itemId = `single-${especialidad.name}-${size}-${Date.now()}`
+
+    addItem({
+      id: itemId,
+      name: `Una Pizza: ${especialidad.name} (40% OFF)`,
+      description,
+      price: discountedPrice,
+      image: "/delicious-pizza.png",
+    })
+
+    Swal.fire({
+      icon: "success",
+      title: "Agregado al carrito",
+      text: `Tu pizza con 40% de descuento ha sido agregada`,
+      timer: 2000,
+      showConfirmButton: false,
+    })
+
+    // Reset form
+    setPizza1Type("completa")
+    setPizza1Mitad2("")
+    setAnotaciones("")
+  }
+
   return (
     <Card className="flex flex-col hover:shadow-xl transition-all duration-300 hover:scale-[1.02] animate-fadeIn">
       <CardHeader className="bg-gradient-to-br from-primary/10 to-accent/10">
@@ -335,11 +391,34 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
         </div>
       </CardContent>
 
-      <CardFooter className="flex flex-col gap-2 bg-gradient-to-br from-primary/5 to-accent/5">
+      <CardFooter className="flex flex-col gap-3 bg-gradient-to-br from-primary/5 to-accent/5">
         <div className="text-2xl font-bold text-primary text-center w-full">${price}</div>
         <Button onClick={handleAddToCart} className="w-full transition-all duration-200 hover:scale-105" size="lg">
           Agregar 2x1 al Carrito
         </Button>
+        <div className="relative w-full">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t"></span>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">O</span>
+          </div>
+        </div>
+        <div className="w-full space-y-2">
+          <div className="text-center">
+            <span className="text-lg font-bold text-primary">${(price * 0.6).toFixed(2)}</span>
+            <span className="text-sm text-muted-foreground line-through ml-2">${price}</span>
+            <span className="text-sm font-semibold text-green-600 dark:text-green-400 ml-2">-40% OFF</span>
+          </div>
+          <Button 
+            onClick={handleAddSinglePizza} 
+            variant="outline" 
+            className="w-full transition-all duration-200 hover:scale-105 border-2 border-primary" 
+            size="lg"
+          >
+            Una Pizza (40% Descuento)
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   )

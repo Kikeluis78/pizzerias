@@ -74,14 +74,14 @@ export function ShoppingCartView() {
       <CardHeader>
         <CardTitle>Productos ({items.length})</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {items.map((item) => (
-          <div key={item.id} className="flex gap-4 pb-4 border-b last:border-0">
+          <div key={item.id} className="flex gap-4 pb-6 border-b last:border-0">
             <img src={item.image || "/placeholder.svg"} alt={item.name} className="w-24 h-24 object-cover rounded-lg" />
 
-            <div className="flex-1">
+            <div className="flex-1 space-y-2">
               <h3 className="font-semibold text-card-foreground">{item.name}</h3>
-              <p className="text-sm text-muted-foreground">{item.description}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{item.description}</p>
               <p className="text-lg font-bold text-primary mt-2">${item.price}</p>
             </div>
 
@@ -113,7 +113,7 @@ export function ShoppingCartView() {
           </div>
         ))}
 
-        <div className="pt-4 border-t">
+        <div className="pt-6 border-t space-y-4">
           <div className="flex items-center gap-2 mb-4">
             <Tag className="h-5 w-5 text-primary" />
             <h3 className="font-semibold text-card-foreground">Cupón de descuento</h3>
@@ -146,10 +146,20 @@ export function ShoppingCartView() {
           )}
         </div>
 
-        <div className="pt-4 space-y-2">
+        <div className="pt-6 space-y-3">
           <div className="flex justify-between text-lg">
             <span className="text-muted-foreground">Subtotal:</span>
             <span className="font-semibold text-card-foreground">${getTotal()}</span>
+          </div>
+
+          {/* Cantidad de pizzas */}
+          <div className="flex justify-between text-base text-muted-foreground pb-2 border-b">
+            <span>Pizzas a recibir:</span>
+            <span className="font-semibold">{items.reduce((sum, item) => {
+              // Contar pizzas: si el nombre contiene "2x1" cuenta como 2, sino como 1
+              const is2x1 = item.name.toLowerCase().includes('2x1') || item.description.toLowerCase().includes('2x1')
+              return sum + (is2x1 ? item.quantity * 2 : item.quantity)
+            }, 0)}</span>
           </div>
 
           {appliedCoupon && (
@@ -164,10 +174,19 @@ export function ShoppingCartView() {
             <span className="font-semibold text-green-600 dark:text-green-400">GRATIS</span>
           </div>
 
-          <div className="flex justify-between text-2xl font-bold pt-2 border-t">
+          <div className="flex justify-between text-2xl font-bold pt-3 border-t">
             <span className="text-card-foreground">Total:</span>
             <span className="text-primary">${getFinalTotal().toFixed(2)}</span>
           </div>
+        </div>
+
+        {/* Botón para seguir comprando */}
+        <div className="pt-4">
+          <Link href="/pizzas">
+            <Button variant="outline" className="w-full">
+              Seguir Comprando
+            </Button>
+          </Link>
         </div>
       </CardContent>
     </Card>
