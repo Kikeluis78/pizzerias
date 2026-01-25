@@ -6,22 +6,40 @@ import { Input } from "@/components/ui/input"
 import { Minus, Plus, Trash2, ShoppingBag, Tag } from "lucide-react"
 import { useCart } from "@/hooks/use-cart"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Swal from "sweetalert2"
 import { cupones } from "@/config/menu.config"
 
 export function ShoppingCartView() {
-  const { items, updateQuantity, removeItem, getTotal } = useCart()
+  const [isMounted, setIsMounted] = useState(false)
+  const { 
+    items, 
+    updateQuantity, 
+    removeItem, 
+    getTotal, 
+    applyCoupon, 
+    removeCoupon: removeCouponAction, 
+    coupon, 
+    getDiscountAmount, 
+    getFinalTotal 
+  } = useCart()
+  
   const [couponCode, setCouponCode] = useState("")
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) {
+    return null
+  }
 
   const validateCoupon = () => {
     const code = couponCode.toUpperCase().trim()
 
     if (cupones[code]) {
-      const couponData = { code, discount: cupones[code].discount }
-      setAppliedCoupon(couponData)
-      localStorage.setItem("appliedCoupon", JSON.stringify(couponData))
+      applyCoupon(code, cupones[code].discount)
+      setCouponCode("") // Clear input on success
       Swal.fire({
         title: "Cupón aplicado",
         text: `Has obtenido ${cupones[code].discount}% de descuento`,
@@ -39,19 +57,15 @@ export function ShoppingCartView() {
     }
   }
 
-  const removeCoupon = () => {
-    setAppliedCoupon(null)
-    setCouponCode("")
-    localStorage.removeItem("appliedCoupon")
-  }
-
-  const calculateDiscount = () => {
-    if (!appliedCoupon) return 0
-    return (getTotal() * appliedCoupon.discount) / 100
-  }
-
-  const getFinalTotal = () => {
-    return getTotal() - calculateDiscount()
+  const handleRemoveCoupon = () => {
+    removeCouponAction()
+    Swal.fire({
+      title: "Cupón eliminado",
+      text: "El descuento ha sido removido",
+      icon: "info",
+      timer: 1500,
+      showConfirmButton: false,
+    })
   }
 
   if (items.length === 0) {
@@ -119,7 +133,7 @@ export function ShoppingCartView() {
             <h3 className="font-semibold text-card-foreground">Cupón de descuento</h3>
           </div>
 
-          {!appliedCoupon ? (
+          {!coupon ? (
             <div className="flex gap-2">
               <Input
                 placeholder="Ingresa tu cupón"
@@ -136,10 +150,10 @@ export function ShoppingCartView() {
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-green-600 dark:text-green-400" />
                 <span className="text-sm font-semibold text-green-700 dark:text-green-300">
-                  {appliedCoupon.code} - {appliedCoupon.discount}% descuento
+                  {coupon.code} - {coupon.discount}% descuento
                 </span>
               </div>
-              <Button variant="ghost" size="sm" onClick={removeCoupon} className="text-red-600 hover:text-red-700">
+              <Button variant="ghost" size="sm" onClick={handleRemoveCoupon} className="text-red-600 hover:text-red-700">
                 Quitar
               </Button>
             </div>
@@ -157,15 +171,19 @@ export function ShoppingCartView() {
             <span>Pizzas a recibir:</span>
             <span className="font-semibold">{items.reduce((sum, item) => {
               // Contar pizzas: si el nombre contiene "2x1" cuenta como 2, sino como 1
+              // Ajuste: verificar si es pizza (no bebida ni spaguetti)
+              const isPizza = item.name.toLowerCase().includes('pizza') || item.name.toLowerCase().includes('2x1')
+              if (!isPizza) return sum
+              
               const is2x1 = item.name.toLowerCase().includes('2x1') || item.description.toLowerCase().includes('2x1')
               return sum + (is2x1 ? item.quantity * 2 : item.quantity)
             }, 0)}</span>
           </div>
 
-          {appliedCoupon && (
+          {coupon && (
             <div className="flex justify-between text-lg text-green-600 dark:text-green-400">
-              <span>Descuento ({appliedCoupon.discount}%):</span>
-              <span className="font-semibold">-${calculateDiscount().toFixed(2)}</span>
+              <span>Descuento ({coupon.discount}%):</span>
+              <span className="font-semibold">-${getDiscountAmount().toFixed(2)}</span>
             </div>
           )}
 

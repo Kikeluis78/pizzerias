@@ -269,32 +269,34 @@ export default function ConfirmarPedidoPage() {
   // ========== COMPONENTES ==========
   const OrderHeader = () => (
     <Card className="mb-6 border-dashed border-primary">
-      <CardHeader>
+      <CardHeader className="bg-muted/20">
         <CardTitle className="flex items-center gap-2">
-          <Hash className="h-5 w-5" />
+          <Hash className="h-5 w-5 text-primary" />
           Folio del Pedido
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-2xl font-bold text-primary">{orderId}</p>
-            <p className="text-sm text-muted-foreground">Este folio será enviado en tu pedido</p>
+      <CardContent className="pt-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-center md:text-left">
+            <p className="text-3xl font-bold text-primary tracking-wider">{orderId}</p>
+            <p className="text-sm text-muted-foreground mt-1">Este folio será tu referencia de seguimiento</p>
           </div>
           <Button 
             variant="outline" 
             size="sm"
+            className="flex items-center gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
             onClick={() => {
               navigator.clipboard.writeText(orderId)
               Swal.fire({
                 icon: 'success',
                 title: 'Copiado',
                 text: 'Folio copiado al portapapeles',
-                timer: 1500
+                timer: 1500,
+                showConfirmButton: false
               })
             }}
           >
-            Copiar
+            Copiar Folio
           </Button>
         </div>
       </CardContent>
@@ -336,6 +338,69 @@ export default function ConfirmarPedidoPage() {
       </CardContent>
     </Card>
   )
+
+  const UserInfoSection = () => {
+    // Si ya tenemos dirección con nombre, usamos eso
+    if (address?.userName) {
+      return (
+        <Card className="mb-6 border-l-4 border-l-primary shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <User className="h-5 w-5 text-primary" />
+              Datos del Cliente
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Nombre</Label>
+                <p className="font-medium text-lg">{address.userName}</p>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Teléfono</Label>
+                <p className="font-medium text-lg">{address.phone}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    // Si es invitado y no hay dirección (ej. recoger en tienda), mostramos formulario
+    if (isGuest) {
+      return <GuestDataForm />
+    }
+
+    // Si hay cuenta de usuario pero no dirección seleccionada (raro pero posible)
+    const userAccount = localStorage.getItem("userAccount")
+    if (userAccount) {
+      const user = JSON.parse(userAccount)
+      return (
+        <Card className="mb-6 border-l-4 border-l-primary shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <User className="h-5 w-5 text-primary" />
+              Datos del Cliente
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Nombre</Label>
+                <p className="font-medium text-lg">{user.name}</p>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Teléfono</Label>
+                <p className="font-medium text-lg">{user.phone}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    return null
+  }
 
   const OrderSummary = () => (
     <Card className="mb-6">
@@ -483,8 +548,8 @@ export default function ConfirmarPedidoPage() {
             {/* 0. Folio del pedido */}
             <OrderHeader />
 
-            {/* 1. Datos del cliente (si es invitado) */}
-            {isGuest && <GuestDataForm />}
+            {/* 1. Datos del cliente (Dinámico: Formulario o Info estática) */}
+            <UserInfoSection />
 
             {/* 2. Detalle del pedido */}
             <OrderSummary />

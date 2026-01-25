@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -23,6 +24,7 @@ interface Pizza2x1CardProps {
 }
 
 export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardProps) {
+  const router = useRouter()
   const { addItem } = useCart()
   const [size, setSize] = useState<"CH" | "MED" | "GDE" | "FAM">("MED")
 
@@ -101,8 +103,17 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
 
     const itemId = `2x1-${especialidad.name}-${pizza2Name}-${size}-${Date.now()}`
 
+    // Generar ID determinista para agrupación
+    const cleanId = (str: string) => str.replace(/[^a-z0-9]/gi, '-').toLowerCase()
+    const p1Part = pizza1Type === "mitad-y-mitad" ? `${cleanId(especialidad.name)}-${cleanId(pizza1Mitad2)}` : cleanId(especialidad.name)
+    const p2Part = pizza2Type === "mitad-y-mitad" ? `${cleanId(pizza2Name)}-${cleanId(pizza2Mitad2)}` : cleanId(pizza2Name)
+    const notesPart = anotaciones.trim() ? `-${cleanId(anotaciones)}` : ''
+    
+    // Sobrescribir itemId con versión determinista
+    const deterministicId = `2x1-${size}-${p1Part}-${p2Part}${notesPart}`
+
     addItem({
-      id: itemId,
+      id: deterministicId,
       name: `2x1: ${especialidad.name} + ${pizza2Name}`,
       description,
       price,
@@ -158,62 +169,6 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
 
   const toggleComplemento = (comp: string) => {
     setSelectedComplementos((prev) => (prev.includes(comp) ? prev.filter((c) => c !== comp) : [...prev, comp]))
-  }
-
-  // Handler para agregar una sola pizza con 40% descuento
-  const handleAddSinglePizza = () => {
-    if (pizza1Type === "mitad-y-mitad" && !pizza1Mitad2) {
-      Swal.fire({
-        icon: "warning",
-        title: "Faltan datos",
-        text: "Selecciona la segunda mitad de la pizza",
-      })
-      return
-    }
-
-    // Calcular precio con 40% descuento
-    const originalPrice = especialidad.prices[size]
-    const discountedPrice = originalPrice * 0.6 // 40% descuento = 60% del precio original
-
-    // Build description
-    let description = `UNA PIZZA - Tamaño: ${size}\n`
-    description += `Descuento aplicado: 40%\n\n`
-    description += `🔴 Pizza: ${especialidad.name}\n`
-    
-    if (pizza1Type === "mitad-y-mitad") {
-      description += `  Mitad y Mitad:\n`
-      description += `  • ${especialidad.name}\n`
-      description += `  • ${pizza1Mitad2}\n`
-    } else {
-      description += `  (Pizza completa)\n`
-    }
-
-    if (anotaciones.trim()) {
-      description += `\n📝 Anotaciones: ${anotaciones}`
-    }
-
-    const itemId = `single-${especialidad.name}-${size}-${Date.now()}`
-
-    addItem({
-      id: itemId,
-      name: `Una Pizza: ${especialidad.name} (40% OFF)`,
-      description,
-      price: discountedPrice,
-      image: "/delicious-pizza.png",
-    })
-
-    Swal.fire({
-      icon: "success",
-      title: "Agregado al carrito",
-      text: `Tu pizza con 40% de descuento ha sido agregada`,
-      timer: 2000,
-      showConfirmButton: false,
-    })
-
-    // Reset form
-    setPizza1Type("completa")
-    setPizza1Mitad2("")
-    setAnotaciones("")
   }
 
   return (
@@ -346,38 +301,6 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
           )}
         </div>
 
-        {/* Complementos
-        <div className="space-y-3 border-t pt-3">
-          <Label className="text-base font-semibold">Agregar Complementos</Label>
-          <div className="flex flex-wrap gap-2">
-            <Badge
-              variant={selectedComplementos.includes("Refresco 2L") ? "default" : "outline"}
-              className="cursor-pointer transition-all duration-200 hover:scale-105"
-              onClick={() => toggleComplemento("Refresco 2L")}
-            >
-              {selectedComplementos.includes("Refresco 2L") && <Plus className="h-3 w-3 mr-1" />}
-              Refresco 2L +$45
-            </Badge>
-            <Badge
-              variant={selectedComplementos.includes("Coca Cola 2L") ? "default" : "outline"}
-              className="cursor-pointer transition-all duration-200 hover:scale-105"
-              onClick={() => toggleComplemento("Coca Cola 2L")}
-            >
-              {selectedComplementos.includes("Coca Cola 2L") && <Plus className="h-3 w-3 mr-1" />}
-              Coca Cola 2L +$49
-            </Badge>
-            <Badge
-              variant={selectedComplementos.includes("Refresco Lata") ? "default" : "outline"}
-              className="cursor-pointer transition-all duration-200 hover:scale-105"
-              onClick={() => toggleComplemento("Refresco Lata")}
-            >
-              {selectedComplementos.includes("Refresco Lata") && <Plus className="h-3 w-3 mr-1" />}
-              Refresco Lata +$28
-            </Badge>
-          </div>
-        </div>  */}
-
-
         <div className="space-y-3 border-t pt-3">
           <Label className="text-base font-semibold">Anotaciones Especiales</Label>
           <Textarea
@@ -396,29 +319,13 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
         <Button onClick={handleAddToCart} className="w-full transition-all duration-200 hover:scale-105" size="lg">
           Agregar 2x1 al Carrito
         </Button>
-        <div className="relative w-full">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t"></span>
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">O</span>
-          </div>
-        </div>
-        <div className="w-full space-y-2">
-          <div className="text-center">
-            <span className="text-lg font-bold text-primary">${(price * 0.6).toFixed(2)}</span>
-            <span className="text-sm text-muted-foreground line-through ml-2">${price}</span>
-            <span className="text-sm font-semibold text-green-600 dark:text-green-400 ml-2">-40% OFF</span>
-          </div>
-          <Button 
-            onClick={handleAddSinglePizza} 
-            variant="outline" 
-            className="w-full transition-all duration-200 hover:scale-105 border-2 border-primary" 
-            size="lg"
-          >
-            Una Pizza (40% Descuento)
-          </Button>
-        </div>
+        <Button 
+          variant="outline" 
+          className="w-full"
+          onClick={() => router.push("/pizzas")}
+        >
+          Volver a Especialidades
+        </Button>
       </CardFooter>
     </Card>
   )
