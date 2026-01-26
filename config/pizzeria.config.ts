@@ -34,6 +34,11 @@ interface PizzeriaConfig {
     cookies: string;
     terms: string;
   };
+
+  // Promociones
+  promoMes: {
+    enabled: boolean;
+  };
 }
 
 // Luego exportas con el tipo
@@ -73,5 +78,10 @@ export const pizzeriaConfig: PizzeriaConfig = {
     privacy: "/politicas/privacidad",
     cookies: "/politicas/cookies",
     terms: "/politicas/terminos",
+  },
+
+  // Promociones
+  promoMes: {
+    enabled: true,
   },
 };

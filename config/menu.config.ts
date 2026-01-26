@@ -147,6 +147,14 @@ export const paquetes = [
     image: "/giant-mega-pizza.jpg",
     price: 499,
   },
+  // --- PROMO DEL MES (TEMPORADA) ---
+  {
+    id: "pkg-promo-mes",
+    name: "Promo del Mes",
+    description: "Paquete especial por temporada",
+    image: "/two-for-one-pizza-deal.jpg",
+    price: 259,
+  },
 ]
 
 // Complementos

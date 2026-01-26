@@ -8,9 +8,21 @@ import { useCart } from "@/hooks/use-cart"
 import Image from "next/image"
 import Swal from "sweetalert2"
 import { paquetes } from "@/config/menu.config"
+import { PromoMesModal } from "@/components/promo-mes-modal"
+import { pizzeriaConfig } from "@/config/pizzeria.config"
+import { useEffect, useState } from "react"
 
 export default function PaquetesPage() {
   const { addItem } = useCart()
+  const [isPromoOpen, setIsPromoOpen] = useState(false)
+
+  useEffect(() => {
+    if (!pizzeriaConfig.promoMes.enabled) return
+    const hiddenDate = localStorage.getItem("promoMesHiddenDate")
+    const today = new Date().toISOString().slice(0, 10)
+    if (hiddenDate === today) return
+    setIsPromoOpen(true)
+  }, [])
 
   const handleAddToCart = (pkg: (typeof paquetes)[0]) => {
     addItem({
@@ -66,6 +78,8 @@ export default function PaquetesPage() {
         </div>
       </main>
       <Footer />
+
+      <PromoMesModal isOpen={isPromoOpen} onClose={() => setIsPromoOpen(false)} />
     </div>
   )
 }

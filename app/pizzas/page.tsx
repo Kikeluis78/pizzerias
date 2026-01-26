@@ -7,13 +7,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { Pizza } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { PizzaSelectionModal } from "@/components/pizza-selection-modal"
+import { PromoMesModal } from "@/components/promo-mes-modal"
+import { pizzeriaConfig } from "@/config/pizzeria.config"
 
 export default function PizzasPage() {
     const router = useRouter()
     const [selectedPizza, setSelectedPizza] = useState<(typeof especialidades2x1)[0] | null>(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isPromoOpen, setIsPromoOpen] = useState(false)
+
+    useEffect(() => {
+        if (!pizzeriaConfig.promoMes.enabled) return
+        const hiddenDate = localStorage.getItem("promoMesHiddenDate")
+        const today = new Date().toISOString().slice(0, 10)
+        if (hiddenDate === today) return
+        setIsPromoOpen(true)
+    }, [])
 
     const handlePizzaClick = (pizza: typeof especialidades2x1[0]) => {
         setSelectedPizza(pizza)
@@ -107,6 +118,11 @@ export default function PizzasPage() {
                 onClose={() => setIsModalOpen(false)}
                 pizza={selectedPizza}
                 allEspecialidades={especialidades2x1.map(e => e.name)}
+            />
+
+            <PromoMesModal
+                isOpen={isPromoOpen}
+                onClose={() => setIsPromoOpen(false)}
             />
         </>
     )

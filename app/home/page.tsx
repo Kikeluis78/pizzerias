@@ -1,6 +1,5 @@
 "use client"
 
-import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ServiceSelector } from "@/components/service-selector"
 import { PackageCarousel } from "@/components/package-carousel"
