@@ -42,7 +42,12 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
 
   const [anotaciones, setAnotaciones] = useState("")
 
+  const isPizzaType = (val: string): val is "completa" | "mitad-y-mitad" => val === "completa" || val === "mitad-y-mitad"
+
   const price = especialidad.prices[size]
+  const mitadYMitadExtra = 25
+  const extraTotal = (pizza1Type === "mitad-y-mitad" ? mitadYMitadExtra : 0) + (pizza2Type === "mitad-y-mitad" ? mitadYMitadExtra : 0)
+  const finalPrice = price + extraTotal
 
   const handleAddToCart = () => {
     if (pizza1Type === "mitad-y-mitad" && !pizza1Mitad2) {
@@ -74,6 +79,10 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
 
     // Build description
     let description = `PROMOCIÓN 2X1 - Tamaño: ${size}\n\n`
+    if (extraTotal > 0) {
+      description += `💡 Nota: Mitad y mitad tiene un costo extra de $${mitadYMitadExtra} por pizza\n`
+      description += `Extra total: +$${extraTotal}\n\n`
+    }
 
     description += `🔴 Primera Pizza: ${especialidad.name}\n`
     if (pizza1Type === "mitad-y-mitad") {
@@ -116,7 +125,7 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
       id: deterministicId,
       name: `2x1: ${especialidad.name} + ${pizza2Name}`,
       description,
-      price,
+      price: finalPrice,
       image: "/delicious-pizza.png",
     })
 
@@ -155,6 +164,8 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
       text: `Tu promoción 2x1 ha sido agregada`,
       timer: 2000,
       showConfirmButton: false,
+    }).then(() => {
+      router.push("/pizzas")
     })
 
     // Reset form
@@ -201,7 +212,12 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
         <div className="space-y-3 border-t pt-3">
           <Label className="text-base font-semibold text-green-500">Primera Pizza: {especialidad.name}</Label>
 
-          <RadioGroup value={pizza1Type} onValueChange={(v) => setPizza1Type(v as any)}>
+          <RadioGroup
+            value={pizza1Type}
+            onValueChange={(v) => {
+              if (isPizzaType(v)) setPizza1Type(v)
+            }}
+          >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="completa" id={`p1-completa-${especialidad.name}`} />
               <Label htmlFor={`p1-completa-${especialidad.name}`}>Pizza completa</Label>
@@ -261,7 +277,12 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
             </Select>
           </div>
 
-          <RadioGroup value={pizza2Type} onValueChange={(v) => setPizza2Type(v as any)}>
+          <RadioGroup
+            value={pizza2Type}
+            onValueChange={(v) => {
+              if (isPizzaType(v)) setPizza2Type(v)
+            }}
+          >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="completa" id={`p2-completa-${especialidad.name}`} />
               <Label htmlFor={`p2-completa-${especialidad.name}`}>Pizza completa</Label>
@@ -315,7 +336,14 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
       </CardContent>
 
       <CardFooter className="flex flex-col gap-3 bg-gradient-to-br from-primary/5 to-accent/5">
-        <div className="text-2xl font-bold text-primary text-center w-full">${price}</div>
+        <div className="text-center w-full space-y-1">
+          {extraTotal > 0 ? (
+            <div className="text-xs font-semibold text-primary">
+              Mitad y mitad: +${mitadYMitadExtra} por pizza (extra total +${extraTotal})
+            </div>
+          ) : null}
+          <div className="text-2xl font-bold text-primary">${finalPrice}</div>
+        </div>
         <Button onClick={handleAddToCart} className="w-full transition-all duration-200 hover:scale-105" size="lg">
           Agregar 2x1 al Carrito
         </Button>

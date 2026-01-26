@@ -36,6 +36,18 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
 
   if (!pizza) return null
 
+  const isPizzaSize = (val: string): val is "CH" | "MED" | "GDE" | "FAM" =>
+    val === "CH" || val === "MED" || val === "GDE" || val === "FAM"
+
+  const isPizzaType = (val: string): val is "completa" | "mitad-y-mitad" => val === "completa" || val === "mitad-y-mitad"
+
+  const getSinglePrice = () => {
+    const base = pizza.prices[size]
+    const discounted = base * 0.6
+    const halfExtra = pizzaType === "mitad-y-mitad" ? 25 : 0
+    return Math.round((discounted + halfExtra) * 100) / 100
+  }
+
   const handleModeSelect = (selectedMode: "2x1" | "single") => {
     if (selectedMode === "2x1") {
       // Guardar selección y navegar a 2x1
@@ -57,7 +69,7 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
       return
     }
 
-    const price = pizza.prices[size]
+    const price = getSinglePrice()
     
     // Generar ID determinista para permitir agrupación
     const cleanId = (str: string) => str.replace(/[^a-z0-9]/gi, '-').toLowerCase()
@@ -66,11 +78,14 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
     const itemId = `single-${cleanId(pizza.name)}-${size}${secondHalfPart}${notesPart}`
     
     let description = `Tamaño: ${size}\n`
+    description += `Precio base: $${pizza.prices[size]}\n`
+    description += `Descuento pizza sola (-40%): $${(pizza.prices[size] * 0.4).toFixed(2)}\n`
     
     if (pizzaType === "mitad-y-mitad") {
       description += `Mitad y Mitad:\n`
       description += `• ${pizza.name}\n`
       description += `• ${secondHalf}\n`
+      description += `Extra mitad y mitad: +$25\n`
     } else {
       description += `Ingredientes: ${pizza.ingredients}\n`
     }
@@ -87,6 +102,8 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
       image: "/delicious-pizza.png",
     })
 
+    handleClose()
+
     Swal.fire({
       icon: "success",
       title: "Agregada al carrito",
@@ -94,8 +111,6 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
       timer: 1500,
       showConfirmButton: false,
     })
-
-    handleClose()
   }
 
   const handleClose = () => {
@@ -152,7 +167,13 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
           <div className="space-y-6 py-2">
             <div className="space-y-3">
               <Label className="text-base font-semibold">Selecciona el tamaño</Label>
-              <RadioGroup value={size} onValueChange={(val) => setSize(val as any)} className="grid grid-cols-2 gap-2">
+              <RadioGroup
+                value={size}
+                onValueChange={(val) => {
+                  if (isPizzaSize(val)) setSize(val)
+                }}
+                className="grid grid-cols-2 gap-2"
+              >
                 {Object.entries(pizza.prices).map(([key, price]) => (
                   <div key={key}>
                     <RadioGroupItem value={key} id={key} className="peer sr-only" />
@@ -170,7 +191,13 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
 
             <div className="space-y-3 pt-2 border-t">
                <Label className="text-base font-semibold text-primary">Tipo de Pizza</Label>
-               <RadioGroup value={pizzaType} onValueChange={(v) => setPizzaType(v as any)} className="flex gap-4">
+               <RadioGroup
+                 value={pizzaType}
+                 onValueChange={(v) => {
+                   if (isPizzaType(v)) setPizzaType(v)
+                 }}
+                 className="flex gap-4"
+               >
                  <div className="flex items-center space-x-2">
                    <RadioGroupItem value="completa" id="type-completa" />
                    <Label htmlFor="type-completa">Completa</Label>
@@ -183,6 +210,7 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
 
                {pizzaType === "mitad-y-mitad" && (
                  <div className="animate-fadeIn mt-2 p-3 bg-muted/50 rounded-lg">
+                   <p className="text-xs text-primary font-semibold mb-2">Mitad y mitad tiene un costo extra de $25</p>
                    <p className="text-sm text-muted-foreground mb-2">Primera mitad: <strong>{pizza.name}</strong></p>
                    <Label className="text-sm mb-1.5 block">Elige la segunda mitad:</Label>
                    <Select value={secondHalf} onValueChange={setSecondHalf}>
@@ -214,7 +242,7 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
 
             <div className="pt-2">
               <Button className="w-full text-lg h-12" onClick={handleAddToCart}>
-                Agregar al Carrito - ${pizza.prices[size]}
+                Agregar al Carrito - ${getSinglePrice()}
               </Button>
               <Button variant="ghost" className="w-full mt-2" onClick={() => setMode("select-mode")}>
                 Volver

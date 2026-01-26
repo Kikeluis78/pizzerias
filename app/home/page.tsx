@@ -9,7 +9,6 @@ import { pizzeriaConfig } from "@/config/pizzeria.config"
 export default function Home() {
   return (
     <>
-      <Header />
       <main className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8 space-y-12">
           <section className="space-y-6">

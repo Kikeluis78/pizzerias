@@ -110,21 +110,26 @@ export default function ConfirmarPedidoPage() {
     }
   }
 
+  const getWhatsAppPhoneNumber = () => {
+    const digitsOnly = pizzeriaConfig.whatsapp.replace(/\D+/g, "")
+
+    if (digitsOnly.length === 10) return `52${digitsOnly}`
+    return digitsOnly
+  }
+
   // ========== MENSAJE WHATSAPP ==========
   const generateWhatsAppMessage = () => {
     const userAccount = localStorage.getItem("userAccount")
-    let user
+    const parsedUser: { name?: string; phone?: string } | null = userAccount ? JSON.parse(userAccount) : null
 
-    if (isGuest) {
-      user = guestData
-    } else {
-      user = userAccount ? JSON.parse(userAccount) : { name: "Cliente", phone: "" }
-    }
+    const customerName = address?.userName?.trim() || guestData.name.trim() || parsedUser?.name || "Cliente"
+    const customerPhone =
+      address?.phone?.trim() || guestData.phone.trim() || parsedUser?.phone || ""
 
     let message = `*🍕 NUEVO PEDIDO - ${pizzeriaConfig.nombre.toUpperCase()}*\n\n`
     message += `*📋 FOLIO:* ${orderId}\n` // <-- NUEVO: Agregar folio
-    message += `*Cliente:* ${user.name}\n`
-    message += `*Teléfono:* ${user.phone || address?.phone || "No especificado"}\n\n`
+    message += `*Cliente:* ${customerName}\n`
+    message += `*Teléfono:* ${customerPhone || "No especificado"}\n\n`
 
     message += `*📦 PRODUCTOS:*\n`
     items.forEach((item, index) => {
@@ -198,7 +203,8 @@ export default function ConfirmarPedidoPage() {
   const handleConfirmOrder = () => {
     // Validar datos de invitado
     if (isGuest) {
-      if (!guestData.name.trim() || !guestData.phone.trim()) {
+      const hasAddressIdentity = Boolean(address?.userName?.trim() && address?.phone?.trim())
+      if (!hasAddressIdentity && (!guestData.name.trim() || !guestData.phone.trim())) {
         Swal.fire({
           icon: "warning",
           title: "Datos incompletos",
@@ -209,15 +215,22 @@ export default function ConfirmarPedidoPage() {
     }
 
     // Guardar pedido en localStorage (opcional, para historial)
+    const userAccount = localStorage.getItem("userAccount")
+    const parsedUser: { name?: string; phone?: string } | null = userAccount ? JSON.parse(userAccount) : null
+    const customer = {
+      name: address?.userName?.trim() || guestData.name.trim() || parsedUser?.name || "Cliente",
+      phone: address?.phone?.trim() || guestData.phone.trim() || parsedUser?.phone || "",
+    }
+
     const orderData = {
       id: orderId,
       items,
       total: getFinalTotal(),
       date: new Date().toISOString(),
-      customer: isGuest ? guestData : JSON.parse(localStorage.getItem("userAccount") || '{}'),
+      customer,
       address,
       paymentMethod,
-      coupon: appliedCoupon
+      coupon: appliedCoupon,
     }
 
     // Guardar en historial de pedidos
@@ -226,7 +239,7 @@ export default function ConfirmarPedidoPage() {
     localStorage.setItem("ordersHistory", JSON.stringify(ordersHistory))
 
     // Generar y enviar mensaje por WhatsApp
-    const phoneNumber = pizzeriaConfig.whatsapp.replace(/\s+/g, '')
+    const phoneNumber = getWhatsAppPhoneNumber()
     const message = generateWhatsAppMessage()
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
     
@@ -340,66 +353,63 @@ export default function ConfirmarPedidoPage() {
   )
 
   const UserInfoSection = () => {
-    // Si ya tenemos dirección con nombre, usamos eso
-    if (address?.userName) {
-      return (
-        <Card className="mb-6 border-l-4 border-l-primary shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <User className="h-5 w-5 text-primary" />
-              Datos del Cliente
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Nombre</Label>
-                <p className="font-medium text-lg">{address.userName}</p>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Teléfono</Label>
-                <p className="font-medium text-lg">{address.phone}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )
-    }
-
-    // Si es invitado y no hay dirección (ej. recoger en tienda), mostramos formulario
-    if (isGuest) {
+    if (isGuest && !address) {
       return <GuestDataForm />
     }
 
-    // Si hay cuenta de usuario pero no dirección seleccionada (raro pero posible)
     const userAccount = localStorage.getItem("userAccount")
-    if (userAccount) {
-      const user = JSON.parse(userAccount)
-      return (
-        <Card className="mb-6 border-l-4 border-l-primary shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <User className="h-5 w-5 text-primary" />
-              Datos del Cliente
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Nombre</Label>
-                <p className="font-medium text-lg">{user.name}</p>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Teléfono</Label>
-                <p className="font-medium text-lg">{user.phone}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )
-    }
+    const user: { name?: string; phone?: string } | null = userAccount ? JSON.parse(userAccount) : null
 
-    return null
+    const displayName = address?.userName?.trim() || user?.name || guestData.name
+    const displayPhone = address?.phone?.trim() || user?.phone || guestData.phone
+
+    if (!displayName && !displayPhone && !address) return null
+
+    return (
+      <Card className="mb-6 border-l-4 border-l-primary shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <User className="h-5 w-5 text-primary" />
+            Datos del Cliente y Entrega
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">Nombre</Label>
+              <p className="font-medium text-lg">{displayName || "No especificado"}</p>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">Teléfono</Label>
+              <p className="font-medium text-lg">{displayPhone || "No especificado"}</p>
+            </div>
+          </div>
+
+          {address ? (
+            <div className="pt-4 border-t space-y-1">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" />
+                <Label className="text-xs text-muted-foreground uppercase tracking-wider">Domicilio</Label>
+              </div>
+              <p className="text-muted-foreground">
+                {address.street} #{address.number}
+              </p>
+              <p className="text-muted-foreground">
+                {address.neighborhood}, CP {address.postalCode}
+              </p>
+              <p className="text-muted-foreground capitalize">Tipo: {address.addressType}</p>
+              {address.references ? (
+                <p className="text-sm text-muted-foreground mt-2">Referencias: {address.references}</p>
+              ) : null}
+            </div>
+          ) : (
+            <div className="pt-4 border-t">
+              <p className="text-sm font-medium text-card-foreground">Recoger en restaurante</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    )
   }
 
   const OrderSummary = () => (
@@ -473,36 +483,6 @@ export default function ConfirmarPedidoPage() {
     </Card>
   )
 
-  const DeliveryAddress = () => {
-    if (!address) return null
-    
-    return (
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Dirección de Entrega
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-1">
-            <p className="font-semibold text-card-foreground">{address.userName}</p>
-            <p className="text-muted-foreground">
-              {address.street} #{address.number}
-            </p>
-            <p className="text-muted-foreground">
-              {address.neighborhood}, CP {address.postalCode}
-            </p>
-            <p className="text-muted-foreground capitalize">Tipo: {address.addressType}</p>
-            {address.references && (
-              <p className="text-sm text-muted-foreground mt-2">Referencias: {address.references}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   const ConfirmationButtons = () => (
     <Card className="border-primary">
       <CardHeader>
@@ -548,7 +528,7 @@ export default function ConfirmarPedidoPage() {
             {/* 0. Folio del pedido */}
             <OrderHeader />
 
-            {/* 1. Datos del cliente (Dinámico: Formulario o Info estática) */}
+            {/* 1. Datos del cliente y entrega (unificado) */}
             <UserInfoSection />
 
             {/* 2. Detalle del pedido */}
@@ -556,9 +536,6 @@ export default function ConfirmarPedidoPage() {
 
             {/* 3. Método de pago */}
             <PaymentMethod />
-
-            {/* 4. Dirección de entrega */}
-            <DeliveryAddress />
 
             {/* 5. Botones de confirmación */}
             <ConfirmationButtons />

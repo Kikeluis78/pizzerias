@@ -3,108 +3,113 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* =============================================================================
+   THEME TOKENS (Shadcn/UI)
+   - Ajusta la paleta global (azules) sin romper componentes.
+   - Mantén consistencia: background neutro, primary azul, acentos suaves.
+============================================================================= */
 :root {
-  /* Food-themed warm color palette for pizzeria - UPDATED TO BLUE THEME */
-  --background: oklch(66.352% 0.17461 258.546); /* Very light blue/white */
-  --foreground: oklch(0.15 0.02 260); /* Deep blue-black */
-  --card: oklch(1 0 0); /* White card */
-  --card-foreground: oklch(0.15 0.02 260);
+  /* Layout */
+  --background: oklch(0.99 0.005 255);
+  --foreground: oklch(0.16 0.02 255);
+
+  /* Surfaces (cards, popovers) */
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 260);
-  
-  /* --- Primary Color (Blue Palette) --- */
-  /* Used for main buttons, highlights, and active states */
-  --primary: oklch(0.55 0.2 260); /* Vibrant Blue */
-  --primary-foreground: oklch(0.98 0 0); /* White text on primary */
-  
-  /* --- Secondary Color --- */
-  /* Used for secondary actions and backgrounds */
-  --secondary: oklch(0.95 0.04 260); /* Light Blue */
-  --secondary-foreground: oklch(0.35 0.1 260); /* Dark Blue text */
-  
-  /* --- Muted Color --- */
-  /* Used for disabled states and subtle backgrounds */
-  --muted: oklch(0.96 0.01 260);
-  --muted-foreground: oklch(0.55 0.05 260);
-  
-  /* --- Accent Color --- */
-  /* Used for hover effects and emphasis */
-  --accent: oklch(0.90 0.05 260);
-  --accent-foreground: oklch(0.25 0.02 30);
-  
-  /* --- Destructive Color --- */
-  /* Used for error states and delete actions */
-  --destructive: oklch(0.6 0.2 25); /* Red (kept for errors) */
+  --popover-foreground: var(--foreground);
+
+  /* Brand (buttons, highlights) */
+  --primary: oklch(0.56 0.18 255);
+  --primary-foreground: oklch(0.99 0 0);
+
+  /* Secondary / muted */
+  --secondary: oklch(0.96 0.01 255);
+  --secondary-foreground: oklch(0.26 0.03 255);
+  --muted: oklch(0.97 0.006 255);
+  --muted-foreground: oklch(0.52 0.03 255);
+
+  /* Accent (hover/soft emphasis) */
+  --accent: oklch(0.93 0.02 255);
+  --accent-foreground: var(--foreground);
+
+  /* Feedback */
+  --destructive: oklch(0.62 0.2 25);
   --destructive-foreground: oklch(0.98 0 0);
-  
-  --border: oklch(0.85 0.02 260);
-  --input: oklch(0.9 0.01 260);
-  --ring: oklch(0.55 0.2 260); /* Matches Primary */
-  
-  /* Chart colors adapted to blue theme */
-  --chart-1: oklch(0.55 0.2 260);
-  --chart-2: oklch(0.65 0.15 240);
-  --chart-3: oklch(0.45 0.1 260);
-  --chart-4: oklch(0.75 0.1 220);
-  --chart-5: oklch(0.35 0.1 280);
-  
+
+  /* Borders / inputs / focus ring */
+  --border: oklch(0.88 0.01 255);
+  --input: oklch(0.92 0.01 255);
+  --ring: var(--primary);
+
+  /* Radius */
   --radius: 0.75rem;
-  
-  /* Sidebar colors */
-  --sidebar: oklch(0.98 0.01 260);
-  --sidebar-foreground: oklch(0.25 0.02 30);
-  --sidebar-primary: oklch(0.55 0.2 260);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.95 0.04 260);
-  --sidebar-accent-foreground: oklch(0.25 0.02 30);
-  --sidebar-border: oklch(0.9 0.01 260);
-  --sidebar-ring: oklch(0.55 0.2 260);
+
+  /* Charts */
+  --chart-1: oklch(0.56 0.18 255);
+  --chart-2: oklch(0.62 0.14 240);
+  --chart-3: oklch(0.50 0.10 260);
+  --chart-4: oklch(0.74 0.10 225);
+  --chart-5: oklch(0.40 0.10 285);
+
+  /* Sidebar */
+  --sidebar: oklch(0.985 0.006 255);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--secondary);
+  --sidebar-accent-foreground: var(--secondary-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 }
 
 .dark {
-  /* Dark mode with blue undertones */
-  --background: oklch(0.15 0.02 260);
-  --foreground: oklch(0.98 0.01 260);
-  --card: oklch(0.2 0.03 260);
-  --card-foreground: oklch(0.98 0.01 260);
-  --popover: oklch(0.2 0.03 260);
-  --popover-foreground: oklch(0.98 0.01 260);
-  
-  --primary: oklch(0.6 0.18 260);
-  --primary-foreground: oklch(0.98 0 0);
-  
-  --secondary: oklch(0.3 0.05 260);
-  --secondary-foreground: oklch(0.98 0.01 260);
-  
-  --muted: oklch(0.25 0.02 260);
-  --muted-foreground: oklch(0.7 0.05 260);
-  
-  --accent: oklch(0.3 0.05 260);
-  --accent-foreground: oklch(0.98 0.01 260);
-  
-  --destructive: oklch(0.6 0.2 25);
+  /* Dark mode (azules más profundos) */
+  --background: oklch(0.16 0.02 255);
+  --foreground: oklch(0.985 0.01 255);
+
+  --card: oklch(0.21 0.02 255);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.21 0.02 255);
+  --popover-foreground: var(--foreground);
+
+  --primary: oklch(0.66 0.16 255);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.28 0.03 255);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.24 0.02 255);
+  --muted-foreground: oklch(0.72 0.03 255);
+
+  --accent: oklch(0.28 0.03 255);
+  --accent-foreground: var(--foreground);
+
+  --destructive: oklch(0.62 0.2 25);
   --destructive-foreground: oklch(0.98 0 0);
-  
-  --border: oklch(0.3 0.02 260);
-  --input: oklch(0.3 0.02 260);
-  --ring: oklch(0.6 0.18 260);
-  
-  --chart-1: oklch(0.6 0.18 260);
-  --chart-2: oklch(0.7 0.15 240);
-  --chart-3: oklch(0.5 0.1 260);
-  --chart-4: oklch(0.8 0.1 220);
-  --chart-5: oklch(0.4 0.1 280);
-  
-  --sidebar: oklch(0.2 0.03 260);
-  --sidebar-foreground: oklch(0.98 0.01 260);
-  --sidebar-primary: oklch(0.6 0.18 260);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.3 0.05 260);
-  --sidebar-accent-foreground: oklch(0.98 0.01 260);
-  --sidebar-border: oklch(0.3 0.02 260);
-  --sidebar-ring: oklch(0.6 0.18 260);
+
+  --border: oklch(0.30 0.02 255);
+  --input: oklch(0.30 0.02 255);
+  --ring: var(--primary);
+
+  --chart-1: oklch(0.66 0.16 255);
+  --chart-2: oklch(0.72 0.13 240);
+  --chart-3: oklch(0.56 0.10 260);
+  --chart-4: oklch(0.82 0.09 225);
+  --chart-5: oklch(0.46 0.10 285);
+
+  --sidebar: oklch(0.19 0.02 255);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--secondary);
+  --sidebar-accent-foreground: var(--secondary-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 }
 
+/* =============================================================================
+   TAILWIND THEME BRIDGE
+============================================================================= */
 @theme inline {
   --font-sans: "Geist", "Geist Fallback";
   --font-mono: "Geist Mono", "Geist Mono Fallback";
@@ -146,6 +151,9 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* =============================================================================
+   BASE / RESET
+============================================================================= */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -153,8 +161,12 @@
   body {
     @apply bg-background text-foreground;
   }
+}
 
-  /* Agregando animaciones personalizadas */
+/* =============================================================================
+   ANIMATIONS (global utilities)
+============================================================================= */
+@layer base {
   @keyframes fadeIn {
     from {
       opacity: 0;

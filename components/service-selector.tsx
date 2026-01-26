@@ -17,6 +17,7 @@ export function ServiceSelector() {
     if (serviceType === "delivery") {
       router.push("/direccion")
     } else if (serviceType === "restaurant") {
+      localStorage.removeItem("selectedAddress")
       Swal.fire({
         title: "¿Qué deseas ordenar?",
         icon: "question",
