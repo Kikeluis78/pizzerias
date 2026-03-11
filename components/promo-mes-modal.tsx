@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { X, ArrowRight, Sparkles } from "lucide-react"
-import * as VisuallyHidden from "@radix-ui/react-visually-hidden"
 import { paquetes } from "@/config/menu.config"
 
 interface PromoMesModalProps {
@@ -25,9 +24,7 @@ export function PromoMesModal({ isOpen, onClose }: PromoMesModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md border-0 bg-gradient-to-br from-orange-50 to-red-50 shadow-2xl">
-        <VisuallyHidden.Root>
-          <DialogTitle>Promo del Mes</DialogTitle>
-        </VisuallyHidden.Root>
+        <DialogTitle>Promo del Mes</DialogTitle>
         
         {/* Botón cerrar */}
         <button
