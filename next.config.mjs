@@ -33,6 +33,7 @@ const withPWANextConfig = withPWA({
 })
 
 const nextConfig = withPWANextConfig({
+  outputFileTracingRoot: __dirname,
   turbopack: {
     root: __dirname,
   },
