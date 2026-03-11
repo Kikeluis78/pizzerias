@@ -15,7 +15,7 @@ import { useCart } from "@/hooks/use-cart"
 import Swal from "sweetalert2"
 import { Plus } from "lucide-react"
 
-interface Pizza2x1CardProps {
+interface Pizza3x1CardProps {
   especialidad: {
     name: string
     ingredients: string
@@ -37,7 +37,7 @@ const getCheckedValue = (checked: string | boolean): boolean => {
   return Boolean(checked)
 }
 
-export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardProps) {
+export function Pizza3x1Card({ especialidad, allEspecialidades }: Pizza3x1CardProps) {
   const router = useRouter()
   const { addItem } = useCart()
   const [size, setSize] = useState<"CH" | "MED" | "GDE" | "FAM">("MED")
@@ -53,6 +53,12 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
   const [pizza2Mitad2, setPizza2Mitad2] = useState("")
   const [pizza2EdgeCheese, setPizza2EdgeCheese] = useState(false)
 
+  // Tercera pizza
+  const [pizza3Type, setPizza3Type] = useState<"completa" | "mitad-y-mitad">("completa")
+  const [pizza3Name, setPizza3Name] = useState("")
+  const [pizza3Mitad2, setPizza3Mitad2] = useState("")
+  const [pizza3EdgeCheese, setPizza3EdgeCheese] = useState(false)
+
   // Complementos
   const [selectedComplementos, setSelectedComplementos] = useState<string[]>([])
 
@@ -62,8 +68,8 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
 
   const price = especialidad.prices[size]
   const mitadYMitadExtra = 25
-  const extraTotal = (pizza1Type === "mitad-y-mitad" ? mitadYMitadExtra : 0) + (pizza2Type === "mitad-y-mitad" ? mitadYMitadExtra : 0)
-  const edgeCheeseExtra = (pizza1EdgeCheese ? getEdgeCheesePrice(size) : 0) + (pizza2EdgeCheese ? getEdgeCheesePrice(size) : 0)
+  const extraTotal = (pizza1Type === "mitad-y-mitad" ? mitadYMitadExtra : 0) + (pizza2Type === "mitad-y-mitad" ? mitadYMitadExtra : 0) + (pizza3Type === "mitad-y-mitad" ? mitadYMitadExtra : 0)
+  const edgeCheeseExtra = (pizza1EdgeCheese ? getEdgeCheesePrice(size) : 0) + (pizza2EdgeCheese ? getEdgeCheesePrice(size) : 0) + (pizza3EdgeCheese ? getEdgeCheesePrice(size) : 0)
   const finalPrice = price + extraTotal + edgeCheeseExtra
 
   const handleAddToCart = () => {
@@ -80,7 +86,7 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
       Swal.fire({
         icon: "warning",
         title: "Faltan datos",
-        text: "Selecciona la segunda pizza del 2x1",
+        text: "Selecciona la segunda pizza del 3x1",
       })
       return
     }
@@ -94,8 +100,26 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
       return
     }
 
+    if (!pizza3Name) {
+      Swal.fire({
+        icon: "warning",
+        title: "Faltan datos",
+        text: "Selecciona la tercera pizza del 3x1",
+      })
+      return
+    }
+
+    if (pizza3Type === "mitad-y-mitad" && !pizza3Mitad2) {
+      Swal.fire({
+        icon: "warning",
+        title: "Faltan datos",
+        text: "Selecciona la segunda mitad de la tercera pizza",
+      })
+      return
+    }
+
     // Build description
-    let description = `PROMOCIÓN 2X1 - Tamaño: ${size}\n\n`
+    let description = `PROMOCIÓN 3X1 - Tamaño: ${size}\n\n`
     if (extraTotal > 0 || edgeCheeseExtra > 0) {
       description += `💡 Extras:\n`
       if (extraTotal > 0) {
@@ -130,6 +154,18 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
       description += `  🧀 Orilla de Queso: +$${getEdgeCheesePrice(size)}\n`
     }
 
+    description += `\n🔴 Tercera Pizza: ${pizza3Name}\n`
+    if (pizza3Type === "mitad-y-mitad") {
+      description += `  Mitad y Mitad:\n`
+      description += `  • ${pizza3Name}\n`
+      description += `  • ${pizza3Mitad2}\n`
+    } else {
+      description += `  (Pizza completa)\n`
+    }
+    if (pizza3EdgeCheese) {
+      description += `  🧀 Orilla de Queso: +$${getEdgeCheesePrice(size)}\n`
+    }
+
     if (anotaciones.trim()) {
       description += `\n📝 Anotaciones: ${anotaciones}`
     }
@@ -138,21 +174,20 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
       description += `\n\n🥤 Complementos: ${selectedComplementos.join(", ")}`
     }
 
-    const itemId = `2x1-${especialidad.name}-${pizza2Name}-${size}-${Date.now()}`
-
-    // Generar ID determinista para agrupación
     const cleanId = (str: string) => str.replace(/[^a-z0-9]/gi, '-').toLowerCase()
     const p1Part = pizza1Type === "mitad-y-mitad" ? `${cleanId(especialidad.name)}-${cleanId(pizza1Mitad2)}` : cleanId(especialidad.name)
     const p1EdgePart = pizza1EdgeCheese ? `-edge1` : ''
     const p2Part = pizza2Type === "mitad-y-mitad" ? `${cleanId(pizza2Name)}-${cleanId(pizza2Mitad2)}` : cleanId(pizza2Name)
     const p2EdgePart = pizza2EdgeCheese ? `-edge2` : ''
+    const p3Part = pizza3Type === "mitad-y-mitad" ? `${cleanId(pizza3Name)}-${cleanId(pizza3Mitad2)}` : cleanId(pizza3Name)
+    const p3EdgePart = pizza3EdgeCheese ? `-edge3` : ''
     const notesPart = anotaciones.trim() ? `-${cleanId(anotaciones)}` : ''
     
-    const deterministicId = `2x1-${size}-${p1Part}${p1EdgePart}-${p2Part}${p2EdgePart}${notesPart}`
+    const deterministicId = `3x1-${size}-${p1Part}${p1EdgePart}-${p2Part}${p2EdgePart}-${p3Part}${p3EdgePart}${notesPart}`
 
     addItem({
       id: deterministicId,
-      name: `2x1: ${especialidad.name} + ${pizza2Name}`,
+      name: `3x1: ${especialidad.name} + ${pizza2Name} + ${pizza3Name}`,
       description,
       price: finalPrice,
       image: "/delicious-pizza.png",
@@ -189,77 +224,70 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
 
     Swal.fire({
       icon: "success",
-      title: "Agregado al carrito",
-      text: `Tu promoción 2x1 ha sido agregada`,
-      timer: 2000,
+      title: "¡Agregado al carrito!",
+      text: "Tu promoción 3x1 se ha agregado correctamente",
+      timer: 1500,
       showConfirmButton: false,
     }).then(() => {
-      router.push("/pizzas")
+      router.push("/carrito")
     })
-
-    // Reset form
-    setPizza1Type("completa")
-    setPizza1Mitad2("")
-    setPizza2Type("completa")
-    setPizza2Name("")
-    setPizza2Mitad2("")
-    setSelectedComplementos([])
-    setAnotaciones("")
-  }
-
-  const toggleComplemento = (comp: string) => {
-    setSelectedComplementos((prev) => (prev.includes(comp) ? prev.filter((c) => c !== comp) : [...prev, comp]))
   }
 
   return (
-    <Card className="flex flex-col hover:shadow-xl transition-all duration-300 hover:scale-[1.02] animate-fadeIn">
-      <CardHeader className="bg-gradient-to-br from-primary/10 to-accent/10">
-        <CardTitle className="text-xl text-balance">{especialidad.name}</CardTitle>
-        <p className="text-sm text-muted-foreground text-pretty">{especialidad.ingredients}</p>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>Promoción 3x1</span>
+          <Badge variant="default" className="ml-2">Tres pizzas al precio de una</Badge>
+        </CardTitle>
       </CardHeader>
-
-      <CardContent className="flex-1 space-y-4">
-        {/* Size selector */}
-        <div className="space-y-2">
-          <Label className="text-[50px] font-semibold">Tamaño</Label>
-          <div className="grid grid-cols-4 gap-2">
-            {(["CH", "MED", "GDE", "FAM"] as const).map((s) => (
-              <Button
-                key={s}
-                variant={size === s ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSize(s)}
-                className="flex flex-col h-auto py-2 transition-all duration-200 hover:scale-105"
-              >
-                <span className="font-bold">{s}</span>
-                <span className="text-xs">${especialidad.prices[s]}</span>
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-3 border-t pt-3">
-          <Label className="text-base font-semibold text-green-500">Primera Pizza: {especialidad.name}</Label>
-
-          <RadioGroup
-            value={pizza1Type}
-            onValueChange={(v) => {
-              if (isPizzaType(v)) setPizza1Type(v)
-            }}
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="completa" id={`p1-completa-${especialidad.name}`} />
-              <Label htmlFor={`p1-completa-${especialidad.name}`}>Pizza completa</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="mitad-y-mitad" id={`p1-mitad-${especialidad.name}`} />
-              <Label htmlFor={`p1-mitad-${especialidad.name}`}>Mitad y mitad</Label>
+      <CardContent className="space-y-6 max-h-[70vh] overflow-y-auto">
+        {/* Tamaño */}
+        <div>
+          <Label className="text-base font-semibold mb-2 block">Tamaño</Label>
+          <RadioGroup value={size} onValueChange={(val) => val && setSize(val as any)}>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(especialidad.prices).map(([key, value]) => (
+                <div key={key}>
+                  <RadioGroupItem value={key} id={`size-${key}`} className="peer sr-only" />
+                  <Label
+                    htmlFor={`size-${key}`}
+                    className="peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground flex h-12 cursor-pointer items-center justify-center rounded-lg border-2 border-input bg-muted transition-all hover:bg-accent"
+                  >
+                    <span className="font-bold">{key}</span> ${value}
+                  </Label>
+                </div>
+              ))}
             </div>
           </RadioGroup>
+        </div>
+
+        {/* Primera Pizza */}
+        <div className="space-y-3 border-t pt-3">
+          <Label className="text-base font-semibold text-red-500">Primera Pizza (3x1)</Label>
+
+          <div>
+            <Label className="text-xs">Tipo</Label>
+            <RadioGroup
+              value={pizza1Type}
+              onValueChange={(v) => {
+                if (isPizzaType(v)) setPizza1Type(v)
+              }}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="completa" id="p1-completa" />
+                <Label htmlFor="p1-completa">Pizza completa</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="mitad-y-mitad" id="p1-mitad" />
+                <Label htmlFor="p1-mitad">Mitad y mitad</Label>
+              </div>
+            </RadioGroup>
+          </div>
 
           {pizza1Type === "mitad-y-mitad" && (
             <Accordion type="single" collapsible>
-              <AccordionItem value="mitades">
+              <AccordionItem value="mitades1">
                 <AccordionTrigger>Seleccionar segunda mitad</AccordionTrigger>
                 <AccordionContent className="space-y-2">
                   <div className="mb-2 text-xs text-muted-foreground bg-muted p-2 rounded">
@@ -299,7 +327,7 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
 
         {/* Segunda Pizza */}
         <div className="space-y-3 border-t pt-3">
-          <Label className="text-base font-semibold text-green-500">Segunda Pizza (2x1)</Label>
+          <Label className="text-base font-semibold text-green-500">Segunda Pizza (3x1)</Label>
 
           <div>
             <Label className="text-xs">Especialidad</Label>
@@ -324,12 +352,12 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
             }}
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="completa" id={`p2-completa-${especialidad.name}`} />
-              <Label htmlFor={`p2-completa-${especialidad.name}`}>Pizza completa</Label>
+              <RadioGroupItem value="completa" id="p2-completa" />
+              <Label htmlFor="p2-completa">Pizza completa</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="mitad-y-mitad" id={`p2-mitad-${especialidad.name}`} />
-              <Label htmlFor={`p2-mitad-${especialidad.name}`}>Mitad y mitad</Label>
+              <RadioGroupItem value="mitad-y-mitad" id="p2-mitad" />
+              <Label htmlFor="p2-mitad">Mitad y mitad</Label>
             </div>
           </RadioGroup>
 
@@ -373,37 +401,98 @@ export function Pizza2x1Card({ especialidad, allEspecialidades }: Pizza2x1CardPr
           </div>
         </div>
 
+        {/* Tercera Pizza */}
+        <div className="space-y-3 border-t pt-3">
+          <Label className="text-base font-semibold text-blue-500">Tercera Pizza (3x1)</Label>
+
+          <div>
+            <Label className="text-xs">Especialidad</Label>
+            <Select value={pizza3Name} onValueChange={setPizza3Name}>
+              <SelectTrigger>
+                <SelectValue placeholder="Elegir especialidad" />
+              </SelectTrigger>
+              <SelectContent>
+                {allEspecialidades.map((esp) => (
+                  <SelectItem key={esp} value={esp}>
+                    {esp}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <RadioGroup
+            value={pizza3Type}
+            onValueChange={(v) => {
+              if (isPizzaType(v)) setPizza3Type(v)
+            }}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="completa" id="p3-completa" />
+              <Label htmlFor="p3-completa">Pizza completa</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="mitad-y-mitad" id="p3-mitad" />
+              <Label htmlFor="p3-mitad">Mitad y mitad</Label>
+            </div>
+          </RadioGroup>
+
+          {pizza3Type === "mitad-y-mitad" && pizza3Name && (
+            <Accordion type="single" collapsible>
+              <AccordionItem value="mitades3">
+                <AccordionTrigger>Seleccionar segunda mitad</AccordionTrigger>
+                <AccordionContent className="space-y-2">
+                  <div className="mb-2 text-xs text-muted-foreground bg-muted p-2 rounded">
+                    Primera mitad: <strong>{pizza3Name}</strong>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Segunda mitad</Label>
+                    <Select value={pizza3Mitad2} onValueChange={setPizza3Mitad2}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Elegir especialidad" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {allEspecialidades.map((esp) => (
+                          <SelectItem key={esp} value={esp}>
+                            {esp}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
+
+          <div className="flex items-center space-x-2 bg-muted/50 p-3 rounded-lg">
+            <Checkbox 
+              id="pizza3-edge-cheese" 
+              checked={pizza3EdgeCheese}
+              onCheckedChange={(checked) => setPizza3EdgeCheese(getCheckedValue(checked))}
+            />
+            <Label htmlFor="pizza3-edge-cheese" className="cursor-pointer font-semibold">
+              🧀 Orilla de Queso +${getEdgeCheesePrice(size)}
+            </Label>
+          </div>
+        </div>
+
         <div className="space-y-3 border-t pt-3">
           <Label className="text-base font-semibold">Anotaciones Especiales</Label>
           <Textarea
-            placeholder="Agraga o quita ingredientes ejemplo:  Sin cebolla, extra queso, orilla de queso, etc."
+            placeholder="Agrega o quita ingredientes ejemplo: Sin cebolla, extra queso, orilla de queso, etc."
             value={anotaciones}
             onChange={(e) => setAnotaciones(e.target.value)}
-            className="min-h-[80px] resize-none"
-            maxLength={200}
+            className="resize-none"
           />
-          <p className="text-xs text-muted-foreground text-right">{anotaciones.length}/200</p>
         </div>
       </CardContent>
-
-      <CardFooter className="flex flex-col gap-3 bg-gradient-to-br from-primary/5 to-accent/5">
-        <div className="text-center w-full space-y-1">
-          {extraTotal > 0 ? (
-            <div className="text-xs font-semibold text-primary">
-              Mitad y mitad: +${mitadYMitadExtra} por pizza (extra total +${extraTotal})
-            </div>
-          ) : null}
-          <div className="text-2xl font-bold text-primary">${finalPrice}</div>
-        </div>
-        <Button onClick={handleAddToCart} className="w-full transition-all duration-200 hover:scale-105" size="lg">
-          Agregar 2x1 al Carrito
+      <CardFooter className="border-t bg-muted/50 pt-4 flex gap-2">
+        <Button onClick={() => router.push("/pizzas")} variant="outline" className="flex-1">
+          Volver
         </Button>
-        <Button 
-          variant="outline" 
-          className="w-full"
-          onClick={() => router.push("/pizzas")}
-        >
-          Volver a Especialidades
+        <Button onClick={handleAddToCart} className="flex-1">
+          Agregar al Carrito - ${finalPrice}
         </Button>
       </CardFooter>
     </Card>

@@ -117,6 +117,9 @@ export const especialidades2x1 = [
   },
 ]
 
+// Especialidades 3x1
+export const especialidades3x1 = especialidades2x1
+
 // Paquetes
 export const paquetes = [
   {
@@ -147,7 +150,6 @@ export const paquetes = [
     image: "/giant-mega-pizza.jpg",
     price: 499,
   },
-  // --- PROMO DEL MES (TEMPORADA) ---
   {
     id: "pkg-promo-mes",
     name: "Promo del Mes",

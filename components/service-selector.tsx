@@ -7,7 +7,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
 import { Home, Store } from "lucide-react"
 import { useRouter } from "next/navigation"
-import Swal from "sweetalert2"
 
 export function ServiceSelector() {
   const [serviceType, setServiceType] = useState<"delivery" | "restaurant" | null>(null)
@@ -18,21 +17,8 @@ export function ServiceSelector() {
       router.push("/direccion")
     } else if (serviceType === "restaurant") {
       localStorage.removeItem("selectedAddress")
-      Swal.fire({
-        title: "¿Qué deseas ordenar?",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Pizzas 2x1",
-        cancelButtonText: "Paquetes",
-        confirmButtonColor: "#ea580c",
-        cancelButtonColor: "#f97316",
-      }).then((result) => {
-        if (result.isConfirmed) {
-          router.push("/pizzas")
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
-          router.push("/paquetes")
-        }
-      })
+      // Redirigir directamente a pizzas sin modal
+      router.push("/pizzas")
     }
   }
 

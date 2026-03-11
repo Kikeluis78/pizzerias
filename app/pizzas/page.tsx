@@ -6,7 +6,7 @@ import { especialidades2x1 } from "@/config/menu.config"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { Pizza } from "lucide-react"
+import { Pizza, ArrowRight } from "lucide-react"
 import { useEffect, useState } from "react"
 import { PizzaSelectionModal } from "@/components/pizza-selection-modal"
 import { PromoMesModal } from "@/components/promo-mes-modal"
@@ -31,10 +31,6 @@ export default function PizzasPage() {
         setIsModalOpen(true)
     }
 
-    const handleViewPaquetes = () => {
-        router.push("/paquetes")
-    }
-
     return (
         <>
             <Header />
@@ -49,14 +45,25 @@ export default function PizzasPage() {
                         <p className="text-lg text-muted-foreground mb-6">
                             Elige tu pizza favorita y selecciona tu promoción
                         </p>
-                        <Button
-                            onClick={handleViewPaquetes}
-                            variant="outline"
-                            size="lg"
-                            className="font-semibold border-2 border-primary text-primary hover:bg-primary/10"
-                        >
-                            Ver Paquetes Especiales
-                        </Button>
+                        <div className="flex flex-wrap justify-center gap-4">
+                            <Button
+                                onClick={() => router.push("/2x1")}
+                                size="lg"
+                                className="font-semibold gap-2"
+                            >
+                                <span>Promoción 2x1</span>
+                                <ArrowRight className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                onClick={() => router.push("/3x1")}
+                                variant="outline"
+                                size="lg"
+                                className="font-semibold border-2 border-orange-500 text-orange-600 hover:bg-orange-50 gap-2"
+                            >
+                                <span>Promoción 3x1</span>
+                                <ArrowRight className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Pizza Grid */}

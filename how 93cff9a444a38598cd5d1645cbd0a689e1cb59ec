@@ -1,0 +1,15 @@
+[33mcommit 93cff9a444a38598cd5d1645cbd0a689e1cb59ec[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: kikeluis78 <enriquegv078@gmail.com>
+Date:   Thu Feb 5 02:27:55 2026 -0600
+
+    pwa exitoso
+
+app/layout.tsx
+components/PWAHandler.tsx
+next.config.mjs
+package-lock.json
+package.json
+public/icon-192x192.png
+public/icon-512x512.png
+public/icon-96x96.png
+public/manifest.json

@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useCart } from "@/hooks/use-cart"
 import Swal from "sweetalert2"
 import { Pizza, ShoppingBag, ArrowRight } from "lucide-react"
+import { especialidades3x1 } from "@/config/menu.config"
 
 interface PizzaSelectionModalProps {
   isOpen: boolean
@@ -25,6 +27,19 @@ interface PizzaSelectionModalProps {
 
 type SelectionMode = "select-mode" | "single-config"
 
+// Función para calcular precio de orilla
+const getEdgeCheesePrice = (size: "CH" | "MED" | "GDE" | "FAM"): number => {
+  const prices = { CH: 30, MED: 40, GDE: 50, FAM: 60 }
+  return prices[size]
+}
+
+// Type guard para CheckedState
+const getCheckedValue = (checked: string | boolean): boolean => {
+  if (typeof checked === "boolean") return checked
+  if (checked === "indeterminate") return false
+  return Boolean(checked)
+}
+
 export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades }: PizzaSelectionModalProps) {
   const router = useRouter()
   const { addItem } = useCart()
@@ -33,6 +48,8 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
   const [notes, setNotes] = useState("")
   const [pizzaType, setPizzaType] = useState<"completa" | "mitad-y-mitad">("completa")
   const [secondHalf, setSecondHalf] = useState("")
+  const [hasEdgeCheese, setHasEdgeCheese] = useState(false)
+  const has3x1 = especialidades3x1.length > 0
 
   if (!pizza) return null
 
@@ -45,15 +62,19 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
     const base = pizza.prices[size]
     const discounted = base * 0.6
     const halfExtra = pizzaType === "mitad-y-mitad" ? 25 : 0
-    return Math.round((discounted + halfExtra) * 100) / 100
+    const edgeExtra = hasEdgeCheese ? getEdgeCheesePrice(size) : 0
+    return Math.round((discounted + halfExtra + edgeExtra) * 100) / 100
   }
 
-  const handleModeSelect = (selectedMode: "2x1" | "single") => {
+  const handleModeSelect = (selectedMode: "2x1" | "3x1" | "single") => {
     if (selectedMode === "2x1") {
-      // Guardar selección y navegar a 2x1
       localStorage.setItem("selectedPizza", pizza.name)
       onClose()
       router.push("/2x1")
+    } else if (selectedMode === "3x1") {
+      localStorage.setItem("selectedPizza", pizza.name)
+      onClose()
+      router.push("/3x1")
     } else {
       setMode("single-config")
     }
@@ -71,11 +92,11 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
 
     const price = getSinglePrice()
     
-    // Generar ID determinista para permitir agrupación
     const cleanId = (str: string) => str.replace(/[^a-z0-9]/gi, '-').toLowerCase()
     const notesPart = notes.trim() ? `-${cleanId(notes)}` : ''
     const secondHalfPart = pizzaType === "mitad-y-mitad" ? `-${cleanId(secondHalf)}` : ''
-    const itemId = `single-${cleanId(pizza.name)}-${size}${secondHalfPart}${notesPart}`
+    const edgeCheesePart = hasEdgeCheese ? `-edge-cheese` : ''
+    const itemId = `single-${cleanId(pizza.name)}-${size}${secondHalfPart}${edgeCheesePart}${notesPart}`
     
     let description = `Tamaño: ${size}\n`
     description += `Precio base: $${pizza.prices[size]}\n`
@@ -90,13 +111,17 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
       description += `Ingredientes: ${pizza.ingredients}\n`
     }
 
+    if (hasEdgeCheese) {
+      description += `🧀 Orilla de Queso: +$${getEdgeCheesePrice(size)}\n`
+    }
+
     if (notes.trim()) {
       description += `Notas: ${notes}`
     }
 
     addItem({
       id: itemId,
-      name: `Pizza ${pizzaType === "mitad-y-mitad" ? `${pizza.name} / ${secondHalf}` : pizza.name}`,
+      name: `Pizza ${pizzaType === "mitad-y-mitad" ? `${pizza.name} / ${secondHalf}` : pizza.name}${hasEdgeCheese ? ' (con Orilla de Queso)' : ''}`,
       description,
       price,
       image: "/delicious-pizza.png",
@@ -119,6 +144,7 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
     setSize("MED")
     setPizzaType("completa")
     setSecondHalf("")
+    setHasEdgeCheese(false)
     onClose()
   }
 
@@ -150,6 +176,20 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
               </div>
               <span className="text-sm text-muted-foreground">Llévate dos pizzas al precio de una</span>
             </Button>
+
+            {has3x1 && (
+              <Button
+                variant="outline"
+                className="h-24 flex flex-col items-center justify-center gap-2 border-2 hover:border-orange-500 hover:bg-orange-50 transition-all group"
+                onClick={() => handleModeSelect("3x1")}
+              >
+                <div className="flex items-center gap-2">
+                  <Pizza className="h-6 w-6 text-orange-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-lg font-bold">Promoción 3x1</span>
+                </div>
+                <span className="text-sm text-muted-foreground">¡Tres pizzas con descuento especial!</span>
+              </Button>
+            )}
 
             <Button
               variant="outline"
@@ -227,6 +267,20 @@ export function PizzaSelectionModal({ isOpen, onClose, pizza, allEspecialidades 
                    </Select>
                  </div>
                )}
+            </div>
+
+            <div className="space-y-3 pt-2 border-t">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="edge-cheese" 
+                  checked={hasEdgeCheese}
+                  onCheckedChange={(checked) => setHasEdgeCheese(getCheckedValue(checked))}
+                />
+                <Label htmlFor="edge-cheese" className="text-base font-semibold cursor-pointer">
+                  🧀 Orilla de Queso +${getEdgeCheesePrice(size)}
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">Agrega una deliciosa orilla de queso fundido a tu pizza</p>
             </div>
 
             <div className="space-y-2">

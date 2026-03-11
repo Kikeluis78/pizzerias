@@ -29,7 +29,6 @@ export default function PaquetesPage() {
       id: pkg.id,
       name: pkg.name,
       price: pkg.price,
-      quantity: 1,
       image: pkg.image,
       description: pkg.description,
     })

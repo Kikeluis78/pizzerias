@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { X, ArrowRight, Sparkles } from "lucide-react"
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden"
 import { paquetes } from "@/config/menu.config"
 
 interface PromoMesModalProps {
@@ -14,19 +15,7 @@ interface PromoMesModalProps {
 
 export function PromoMesModal({ isOpen, onClose }: PromoMesModalProps) {
   const router = useRouter()
-  const [code, setCode] = useState("")
-
   const promoPackage = useMemo(() => paquetes.find((p) => p.id === "pkg-promo-mes") || null, [])
-
-  useEffect(() => {
-    if (!isOpen) setCode("")
-  }, [isOpen])
-
-  const handleHideToday = () => {
-    const today = new Date().toISOString().slice(0, 10)
-    localStorage.setItem("promoMesHiddenDate", today)
-    onClose()
-  }
 
   const handleGoToPaquetes = () => {
     router.push("/paquetes")
@@ -35,58 +24,77 @@ export function PromoMesModal({ isOpen, onClose }: PromoMesModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center text-primary">Promo del Mes</DialogTitle>
-          <DialogDescription className="text-center">
-            Descuentos especiales por temporada.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-md border-0 bg-gradient-to-br from-orange-50 to-red-50 shadow-2xl">
+        <VisuallyHidden.Root>
+          <DialogTitle>Promo del Mes</DialogTitle>
+        </VisuallyHidden.Root>
+        
+        {/* Botón cerrar */}
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 p-2 hover:bg-white/50 rounded-lg transition-colors"
+        >
+          <X className="h-5 w-5 text-gray-600" />
+        </button>
 
         {promoPackage ? (
-          <div className="space-y-4">
-            <div className="rounded-lg border bg-card p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Paquete destacado</p>
-                  <p className="text-lg font-bold">{promoPackage.name}</p>
-                  <p className="text-sm text-muted-foreground">{promoPackage.description}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Desde</p>
-                  <p className="text-2xl font-bold text-primary">${promoPackage.price}</p>
+          <div className="space-y-6 pt-2">
+            {/* Header con icono */}
+            <div className="text-center space-y-2">
+              <div className="flex justify-center">
+                <div className="bg-gradient-to-br from-orange-500 to-red-500 p-3 rounded-full">
+                  <Sparkles className="h-6 w-6 text-white" />
                 </div>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Ir a Paquetes</p>
-              <div className="flex gap-2">
-                <Input
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="Escribe OK y presiona Ir"
-                />
-                <Button onClick={handleGoToPaquetes} disabled={code.trim().toLowerCase() !== "ok"}>
-                  Ir
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Tip: escribe <span className="font-semibold">OK</span> para habilitar el botón.
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                ¡Promo del Mes!
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Aprovecha nuestros mejores descuentos
               </p>
             </div>
 
-            <Button variant="outline" className="w-full" onClick={onClose}>
-              Cerrar
-            </Button>
-            <Button variant="ghost" className="w-full" onClick={handleHideToday}>
-              No mostrar hoy
-            </Button>
+            {/* Contenido promo */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-orange-100">
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-orange-600 uppercase tracking-wide">
+                  Paquete especial
+                </p>
+                <div>
+                  <p className="text-xl font-bold text-foreground">{promoPackage.name}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{promoPackage.description}</p>
+                </div>
+                <div className="pt-3 border-t border-gray-100">
+                  <p className="text-xs text-muted-foreground mb-1">Desde</p>
+                  <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                    ${promoPackage.price}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Botones de acción */}
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="h-12 rounded-xl font-semibold border-gray-300 hover:bg-gray-50"
+              >
+                Cerrar
+              </Button>
+              <Button
+                onClick={handleGoToPaquetes}
+                className="h-12 rounded-xl font-semibold bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg flex items-center justify-center gap-2"
+              >
+                Ver Paquetes
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         ) : (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              No se encontró la Promo del Mes en la lista de paquetes.
+          <div className="space-y-4 text-center py-4">
+            <p className="text-muted-foreground">
+              No hay promo disponible en este momento
             </p>
             <Button className="w-full" onClick={handleGoToPaquetes}>
               Ver Paquetes
